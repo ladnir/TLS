@@ -1,5 +1,7 @@
 #pragma once
+#include "Header.h"
 
+#include <list>
 #include <thread>
 
 class Server
@@ -10,16 +12,15 @@ public:
 
 
 private:
-    int mListenSocket;
-    int mConnectSocket;
-
-    int mOn = 1;
-
-    struct sockaddr_in mLocalAddr;
-    struct sockaddr_in mClientAddr;
-    int mClientAddrLength;
 
     std::thread mThread;
-    void run();
+    void serverMain();
+
+    void handleHttpRequest(int connectSocket);
+    std::string readLine(int connectionSocket); 
+    void buildErrorResponce(int connectionSocket);
+    void buildSuccessResponce(int connectionSocket);
+
+    std::list<std::thread> mServiceThreads;
 };
 

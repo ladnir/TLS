@@ -65,13 +65,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp" />
+    <ClCompile Include="DES.cpp" />
     <ClCompile Include="HTTP.cpp" />
     <ClCompile Include="HttpUtil.cpp" />
     <ClCompile Include="Server.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Client.h" />
+    <ClInclude Include="DES.h" />
     <ClInclude Include="Header.h" />
+    <ClInclude Include="HttpUtil.h" />
     <ClInclude Include="Server.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
