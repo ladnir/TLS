@@ -1,6 +1,9 @@
 #include "DES.h"
 #include "Header.h"
 
+#include <exception>
+#include <random>
+
 #define GET_BIT(array, bit) \
     (array[(int)(bit / 8)] & (0x80 >> (bit % 8)))
 
@@ -142,39 +145,107 @@ DES::~DES()
 
 void DES::encrypt(const uint8_t* plainText,
                         uint8_t* cypherText,
-                        uint32_t byteLength,
-                        Mode     mode)
+				  const uint8_t* iv,
+                  const uint32_t byteLength,
+                  const Mode     mode)
 {
-    uint8_t inputBlock[DES_BLOCK_SIZE];
+	int paddedLength = DES_BLOCK_SIZE - (byteLength % DES_BLOCK_SIZE) + byteLength;
+	uint8_t* paddedPlaintext =  new uint8_t[paddedLength];
+	 
+	memset(paddedPlaintext, 0x0, paddedLength); // optimie this memset
+	memcpy(paddedPlaintext, plainText, byteLength);
+	paddedPlaintext[byteLength] = 0x80;
 
-     
+	chainOperate(paddedPlaintext, cypherText, iv, mKey, paddedLength / DES_BLOCK_SIZE, mode, Encrypt);
+
+	delete paddedPlaintext;
 }
 
-void DES::decrypt(const uint8_t* cypherText,
-                        uint8_t* plainText,
-                        uint32_t byteLength,
-                        Mode     mode)
+void DES::decrypt(const uint8_t*  cypherText,
+				  const uint32_t  blockCount,
+                        uint8_t*  plainText,
+				  const uint8_t*  iv,
+                        uint32_t& byteLength,
+                  const Mode      mode)
 {
-    
+	chainOperate(cypherText, plainText, iv, mKey, byteLength / DES_BLOCK_SIZE, mode, Decrypt);
+
+	int i = 0;
+	do{
+		if (plainText[blockCount * DES_BLOCK_SIZE - i++] != 0){
+			throw new std::exception("bad padding excaption.");
+		}
+	} while (plainText[blockCount * DES_BLOCK_SIZE - i] != 0x80);
+	byteLength = blockCount * DES_BLOCK_SIZE - i;
+
+
 }
 
 void DES::blockEncrypt(const uint8_t* plainText, 
                              uint8_t* cypherText)
 {
-    blockOperation(plainText, cypherText, mKey, opType::Encrypt);
+    blockOperate(plainText, cypherText, mKey, opType::Encrypt);
 }
 
 void DES::blockDecrypt(const uint8_t* cypherText, 
                              uint8_t* plainText)
 {
-    blockOperation(cypherText, plainText, mKey, opType::Decrypt);
+    blockOperate(cypherText, plainText, mKey, opType::Decrypt);
 
 }
 
-void DES::blockOperation(const uint8_t* src,
-                               uint8_t* dest,
-                         const uint8_t* key,
-                         const opType         operation)
+
+void DES::chainOperate(const uint8_t* src,
+                             uint8_t* dest,
+					   const uint8_t* iv,
+                       const uint8_t* key,
+                       const uint32_t blockCount,
+                       const Mode     mode,
+                       const opType   operation)
+{
+	uint8_t tempBlock[DES_BLOCK_SIZE];
+	uint8_t inputBlock[DES_BLOCK_SIZE];
+
+	switch (mode){
+	case Mode::ECB:
+		for (int i = 0; i < blockCount; i += DES_BLOCK_SIZE)
+		{
+			memcpy(inputBlock, src + i, DES_BLOCK_SIZE);
+			blockOperate(inputBlock, dest + i, key, operation);
+		}
+	
+		break;
+	case Mode::CBC:
+
+		memcpy(tempBlock, iv, DES_BLOCK_SIZE);
+
+		for (int i = 0; i < blockCount; i += DES_BLOCK_SIZE)
+		{
+			if (operation == opType::Encrypt)
+			{
+				memcpy(inputBlock, src + i, DES_BLOCK_SIZE);
+				xor(inputBlock, tempBlock, DES_BLOCK_SIZE);
+				blockOperate(inputBlock, dest + i, key, operation);
+				memcpy(tempBlock, dest + i, DES_BLOCK_SIZE);
+			}
+			else{
+				memcpy(inputBlock, src + i, DES_BLOCK_SIZE);
+				blockOperate(inputBlock, dest + i, key, operation);
+				xor(dest + i, tempBlock, DES_BLOCK_SIZE);
+				memcpy(tempBlock, src + i, DES_BLOCK_SIZE);
+			}
+		}
+		break;
+	default:
+
+		throw new std::exception("Mode not supported.");
+	}
+}
+
+void DES::blockOperate(const uint8_t* src,
+                             uint8_t* dest,
+                       const uint8_t* key,
+                       const opType         operation)
 {
     uint8_t ip[DES_BLOCK_SIZE];
     uint8_t ExpandedBlock[EXPANSION_BLOCK_SIZE];

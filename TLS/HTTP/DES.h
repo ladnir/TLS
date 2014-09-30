@@ -11,17 +11,20 @@ public:
     DES(const uint8_t* key);
     ~DES();
 
-    enum Mode {ECB};
+    enum Mode {ECB, CBC};
 
     void encrypt(const uint8_t* plainText,
                        uint8_t* cypherText,
-                       uint32_t byteLength,
-                       Mode     mode);
+			     const uint8_t*	iv,
+                 const uint32_t byteLength,
+                 const Mode     mode);
 
-    void decrypt(const uint8_t* cypherText,
-                       uint8_t* plainText,
-                       uint32_t byteLength,
-                       Mode     mode);
+    void decrypt( const uint8_t*  cypherText,
+				  const uint32_t  blockCount,
+				        uint8_t*  plainText,
+				  const uint8_t*  iv,
+				        uint32_t& byteLength,
+				  const Mode      mode);
 
     void blockEncrypt(const uint8_t* plainText, 
                             uint8_t* cypherText);
@@ -32,7 +35,14 @@ public:
 private:
     enum opType {Encrypt, Decrypt};
 
-    static void chainOperate();
+    static void chainOperate(const uint8_t* src,
+                                   uint8_t* dest,
+							 const uint8_t* iv,
+                             const uint8_t* key,
+                             const uint32_t blockCount,
+                             const Mode		mode,
+                             const opType   operation);
+
     static void blockOperate(const uint8_t* src,
                                    uint8_t* dest,
                              const uint8_t* key,

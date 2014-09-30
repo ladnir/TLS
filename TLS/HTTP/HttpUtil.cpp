@@ -1,12 +1,14 @@
 
 #include "Header.h"
- 
-
-
+#include <stdint.h>
+#include <cassert>
+#include <sstream>
+#include <vector>
+#include <exception>
 
 static const std::string base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-"abcdefghijklmnopqrstuvwxyz"
-"0123456789+/";
+										"abcdefghijklmnopqrstuvwxyz"
+										"0123456789+/";
 std::string base64_encode(uint8_t const* bytes_to_encode, unsigned int in_len) {
     
     std::string ret;
@@ -94,4 +96,68 @@ std::string base64_decode(std::string const& encoded_string) {
     }
 
     return ret;
+}
+
+
+std::string base16_encode(uint8_t const* bytesToEncode, uint32_t byteLength)
+{
+	static const std::string base16_chars = "0123456789ABCDEF";
+	std::string encoding("0x");
+	uint8_t idx;
+
+	for (int i = 0; i < byteLength; i++)
+	{
+		idx = bytesToEncode[i] & 0xF0;
+		encoding += base16_chars[idx];
+
+		idx = bytesToEncode[i] & 0x0F;
+		encoding += base16_chars[idx];
+	}
+
+	return encoding;
+}
+
+std::vector<uint8_t> base16_decode(std::string const& encoded_string) 
+{
+	std::vector<uint8_t> decode(encoded_string.size() >> 1);
+
+	assert(encoded_string.size() % 2 == 0 ); // is even
+
+	int idx = 0;
+	if (encoded_string.size() >= 2){
+		if (encoded_string[0] == '0' && encoded_string[1] == 'x')
+		{
+			idx += 2;
+		}
+	}
+	uint8_t val;
+
+	while (idx < encoded_string.size())
+	{
+		val = 0;
+		if (     encoded_string[idx] >= (uint8_t)'0' && encoded_string[idx] <= (uint8_t)'9'){
+			val = encoded_string[idx] - (uint8_t)'0';
+		}
+		else if (encoded_string[idx] >= (uint8_t)'A' && encoded_string[idx] <= (uint8_t)'F'){
+			val = encoded_string[idx] - (uint8_t)'A' + 10;
+		}
+		else if (encoded_string[idx] >= (uint8_t)'a' && encoded_string[idx] <= (uint8_t)'f'){
+			val = encoded_string[idx] - (uint8_t)'a' + 10;
+		}
+		else{
+			throw new std::exception("Bad HEX(base16) encoding");
+		}
+
+		if (idx & 1 == 0){ // even
+			decode[idx >> 1] = val;
+		}
+		else{ // odd
+			decode[idx >> 1] |= val << 4;
+		}
+		idx++;
+	}
+
+	return decode;
+
+	
 }

@@ -23,12 +23,16 @@ bool init()
 int main(int argc, char** argv)
 {
 
-    uint8_t key[DES_KEY_SIZE] = { 8, 7, 6, 5, 4, 3, 2, 1 };
+    uint8_t key[DES_KEY_SIZE] = { 15, 12, 10, 5, 4, 3, 2, 1 };
     uint8_t data[DES_BLOCK_SIZE] = { 1, 2, 3, 4, 5, 6, 7, 8 };
     uint8_t cypherText[DES_BLOCK_SIZE] = {};
     uint8_t plainText[DES_BLOCK_SIZE] = {};
 
     DES myDES(key);
+	std::string encode = base16_encode(key, DES_KEY_SIZE);
+	std::cout << encode;
+
+	auto decode = base16_decode(encode);
 
     myDES.blockEncrypt(data,cypherText);
     myDES.blockDecrypt(cypherText, plainText);
