@@ -23,20 +23,20 @@ bool init()
 int main(int argc, char** argv)
 {
 
-    uint8_t key[DES_KEY_SIZE] = { 15, 12, 10, 5, 4, 3, 2, 1 };
-    uint8_t data[DES_BLOCK_SIZE] = { 1, 2, 3, 4, 5, 6, 7, 8 };
-    uint8_t cypherText[DES_BLOCK_SIZE] = {};
-    uint8_t plainText[DES_BLOCK_SIZE] = {};
+	vector<uint8_t> vKey{ 15, 12, 10, 5, 4, 3, 2, 1, 15, 12, 10, 5, 4, 3, 2, 1, 15, 12, 10, 5, 4, 3, 2, 1 };
+	vector<uint8_t> iv  { 22, 1 , 4 , 5, 7, 33, 23, 4 };
 
-    DES myDES(key);
-	std::string encode = base16_encode(key, DES_KEY_SIZE);
-	std::cout << encode;
+	string input = "this is a story about a girl, who cried a river and drowned the whole world. ";
+	vector<uint8_t> data (input.begin(), input.end());
 
-	auto decode = base16_decode(encode);
+	vector<uint8_t> cypherText;
+	vector<uint8_t> plainText;
 
-    myDES.blockEncrypt(data,cypherText);
-    myDES.blockDecrypt(cypherText, plainText);
+	TripleDES myDES(vKey, DES::CBC);
+	myDES.encrypt(data, iv, cypherText);
+	myDES.decrypt(cypherText, iv, plainText);
 
+	return 1;
 
     //if(init()){
     //    Server server;

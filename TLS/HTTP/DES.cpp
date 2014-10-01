@@ -3,6 +3,7 @@
 
 #include <exception>
 #include <random>
+#include <cassert>
 
 #define GET_BIT(array, bit) \
     (array[(int)(bit / 8)] & (0x80 >> (bit % 8)))
@@ -130,122 +131,36 @@ const int DES::pTable[32] = {
     19,	13, 30,	6 , 22, 11, 4 , 25
 };
 
-DES::DES(const uint8_t* key)
+DES::DES(const uint8_t* key, Mode mode) : BlockCypher(mode)
 {
-    mKey = new uint8_t[8];
-    memcpy(mKey, key,DES_KEY_SIZE);
+	mBlockSize = DES_BLOCK_SIZE;
+	mKeySize = DES_KEY_SIZE;
+
+	mKey = new uint8_t[8];
+	memcpy(mKey, key, DES_KEY_SIZE);
 }
 
+DES::DES(const std::vector<uint8_t> key, Mode mode) : BlockCypher(mode)
+{
+	mBlockSize = DES_BLOCK_SIZE;
+	mKeySize = DES_KEY_SIZE;
+
+	mKey = new uint8_t[8];
+	assert(key.size() == DES_KEY_SIZE);
+	memcpy(mKey, &key[0], DES_KEY_SIZE);
+}
+
+DES::DES(Mode mode) : BlockCypher(mode) {}
 
 DES::~DES()
 {
-    delete mKey;
-}
-
-
-void DES::encrypt(const uint8_t* plainText,
-                        uint8_t* cypherText,
-				  const uint8_t* iv,
-                  const uint32_t byteLength,
-                  const Mode     mode)
-{
-	int paddedLength = DES_BLOCK_SIZE - (byteLength % DES_BLOCK_SIZE) + byteLength;
-	uint8_t* paddedPlaintext =  new uint8_t[paddedLength];
-	 
-	memset(paddedPlaintext, 0x0, paddedLength); // optimie this memset
-	memcpy(paddedPlaintext, plainText, byteLength);
-	paddedPlaintext[byteLength] = 0x80;
-
-	chainOperate(paddedPlaintext, cypherText, iv, mKey, paddedLength / DES_BLOCK_SIZE, mode, Encrypt);
-
-	delete paddedPlaintext;
-}
-
-void DES::decrypt(const uint8_t*  cypherText,
-				  const uint32_t  blockCount,
-                        uint8_t*  plainText,
-				  const uint8_t*  iv,
-                        uint32_t& byteLength,
-                  const Mode      mode)
-{
-	chainOperate(cypherText, plainText, iv, mKey, byteLength / DES_BLOCK_SIZE, mode, Decrypt);
-
-	int i = 0;
-	do{
-		if (plainText[blockCount * DES_BLOCK_SIZE - i++] != 0){
-			throw new std::exception("bad padding excaption.");
-		}
-	} while (plainText[blockCount * DES_BLOCK_SIZE - i] != 0x80);
-	byteLength = blockCount * DES_BLOCK_SIZE - i;
-
-
-}
-
-void DES::blockEncrypt(const uint8_t* plainText, 
-                             uint8_t* cypherText)
-{
-    blockOperate(plainText, cypherText, mKey, opType::Encrypt);
-}
-
-void DES::blockDecrypt(const uint8_t* cypherText, 
-                             uint8_t* plainText)
-{
-    blockOperate(cypherText, plainText, mKey, opType::Decrypt);
-
-}
-
-
-void DES::chainOperate(const uint8_t* src,
-                             uint8_t* dest,
-					   const uint8_t* iv,
-                       const uint8_t* key,
-                       const uint32_t blockCount,
-                       const Mode     mode,
-                       const opType   operation)
-{
-	uint8_t tempBlock[DES_BLOCK_SIZE];
-	uint8_t inputBlock[DES_BLOCK_SIZE];
-
-	switch (mode){
-	case Mode::ECB:
-		for (int i = 0; i < blockCount; i += DES_BLOCK_SIZE)
-		{
-			memcpy(inputBlock, src + i, DES_BLOCK_SIZE);
-			blockOperate(inputBlock, dest + i, key, operation);
-		}
-	
-		break;
-	case Mode::CBC:
-
-		memcpy(tempBlock, iv, DES_BLOCK_SIZE);
-
-		for (int i = 0; i < blockCount; i += DES_BLOCK_SIZE)
-		{
-			if (operation == opType::Encrypt)
-			{
-				memcpy(inputBlock, src + i, DES_BLOCK_SIZE);
-				xor(inputBlock, tempBlock, DES_BLOCK_SIZE);
-				blockOperate(inputBlock, dest + i, key, operation);
-				memcpy(tempBlock, dest + i, DES_BLOCK_SIZE);
-			}
-			else{
-				memcpy(inputBlock, src + i, DES_BLOCK_SIZE);
-				blockOperate(inputBlock, dest + i, key, operation);
-				xor(dest + i, tempBlock, DES_BLOCK_SIZE);
-				memcpy(tempBlock, src + i, DES_BLOCK_SIZE);
-			}
-		}
-		break;
-	default:
-
-		throw new std::exception("Mode not supported.");
-	}
+	delete mKey;
 }
 
 void DES::blockOperate(const uint8_t* src,
                              uint8_t* dest,
                        const uint8_t* key,
-                       const opType         operation)
+                       const opType   operation)
 {
     uint8_t ip[DES_BLOCK_SIZE];
     uint8_t ExpandedBlock[EXPANSION_BLOCK_SIZE];
@@ -347,15 +262,6 @@ void DES::ror(uint8_t* target)
     target[0] = (target[0] >> 1) | carryRight;
 }
 
-void DES::xor(uint8_t* target, const uint8_t* src, int len)
-{
-    while (len--)
-    {
-        *target++ ^= *src++;
-    }
-}
-
-
 void DES::permute(uint8_t target[], const uint8_t src[], const int permuteTable[], int len)
 {
     for (int i = 0; i < len * 8; i++){
@@ -366,4 +272,38 @@ void DES::permute(uint8_t target[], const uint8_t src[], const int permuteTable[
             CLEAR_BIT(target, i);
         }
     }
+}
+
+TripleDES::TripleDES(const uint8_t* key, Mode mode) : DES(mode)
+{
+	mBlockSize = DES_BLOCK_SIZE;
+	mKeySize = DES_KEY_SIZE * 3;
+
+	mKey = new uint8_t[DES_KEY_SIZE * 3];
+	memcpy(mKey, key, mKeySize);
+}
+TripleDES::TripleDES(const std::vector<uint8_t> key, Mode mode) : DES(mode)
+{
+	mBlockSize = DES_BLOCK_SIZE;
+	mKeySize = DES_KEY_SIZE * 3;
+
+	mKey = new uint8_t[DES_KEY_SIZE * 3];
+	assert(key.size() == mKeySize);
+	memcpy(mKey, &key[0], mKeySize);
+}
+
+void TripleDES::blockOperate(const uint8_t* src,
+							       uint8_t* dest,
+							 const uint8_t* key,
+							 const opType   operation)
+{
+	uint8_t* buffer1 = new uint8_t[DES_KEY_SIZE * 3];
+	uint8_t* buffer2 = new uint8_t[DES_KEY_SIZE * 3];
+
+	DES::blockOperate(src    , buffer1, key + DES_KEY_SIZE * 0, operation);
+	DES::blockOperate(buffer1, buffer2, key + DES_KEY_SIZE * 1, operation);
+	DES::blockOperate(buffer2, dest   , key + DES_KEY_SIZE * 2, operation);
+
+	delete buffer1;
+	delete buffer2;
 }

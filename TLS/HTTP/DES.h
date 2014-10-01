@@ -4,53 +4,24 @@
 #define DES_KEY_SIZE 8
 
 #include <stdint.h>
+#include <vector>
+#include "BlockCypher.h"
 
-class DES
+class DES : public BlockCypher
 {
 public:
-    DES(const uint8_t* key);
+	DES(const uint8_t* key, Mode mode);
+	DES(const std::vector<uint8_t> key, Mode mode);
     ~DES();
 
-    enum Mode {ECB, CBC};
+protected:	
 
-    void encrypt(const uint8_t* plainText,
-                       uint8_t* cypherText,
-			     const uint8_t*	iv,
-                 const uint32_t byteLength,
-                 const Mode     mode);
+	DES( Mode mode);
 
-    void decrypt( const uint8_t*  cypherText,
-				  const uint32_t  blockCount,
-				        uint8_t*  plainText,
-				  const uint8_t*  iv,
-				        uint32_t& byteLength,
-				  const Mode      mode);
-
-    void blockEncrypt(const uint8_t* plainText, 
-                            uint8_t* cypherText);
-
-    void blockDecrypt(const uint8_t* cypherText, 
-                            uint8_t* plainText);
-
-private:
-    enum opType {Encrypt, Decrypt};
-
-    static void chainOperate(const uint8_t* src,
-                                   uint8_t* dest,
-							 const uint8_t* iv,
-                             const uint8_t* key,
-                             const uint32_t blockCount,
-                             const Mode		mode,
-                             const opType   operation);
-
-    static void blockOperate(const uint8_t* src,
-                                   uint8_t* dest,
-                             const uint8_t* key,
-                             const opType   operation);
-
-    static void xor(uint8_t* target, 
-                    const uint8_t* src, 
-                    int len);
+	virtual void blockOperate(const uint8_t* src,
+                                    uint8_t* dest,
+                              const uint8_t* key,
+                              const opType   operation);
 
     static void permute(uint8_t target[], 
                         const uint8_t src[], 
@@ -60,9 +31,6 @@ private:
     static void rol(uint8_t* target);
     static void ror(uint8_t* target);
 
-    uint8_t* mKey;
-
-
     // DES permutation tables
     static const int ipTable[64];
     static const int fpTable[64];
@@ -71,4 +39,19 @@ private:
     static const int pc2Table[48];
     static const int SBox[8][64];
     static const int pTable[32];
+};
+
+class TripleDES : public DES
+{
+public:
+	TripleDES(const uint8_t* key, Mode mode);
+	TripleDES(const std::vector<uint8_t> key, Mode mode);
+	//~TripleDES();
+
+protected:	
+
+	virtual void blockOperate(const uint8_t* src,
+                                    uint8_t* dest,
+                              const uint8_t* key,
+                              const opType   operation);
 };

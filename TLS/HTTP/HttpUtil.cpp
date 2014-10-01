@@ -131,28 +131,29 @@ std::vector<uint8_t> base16_decode(std::string const& encoded_string)
 		}
 	}
 	uint8_t val;
-
+	uint8_t c;
 	while (idx < encoded_string.size())
 	{
 		val = 0;
-		if (     encoded_string[idx] >= (uint8_t)'0' && encoded_string[idx] <= (uint8_t)'9'){
-			val = encoded_string[idx] - (uint8_t)'0';
+		c = encoded_string[idx];
+		if (     c >= (uint8_t)'0' && c <= (uint8_t)'9'){
+			val = c - (uint8_t)'0';
 		}
-		else if (encoded_string[idx] >= (uint8_t)'A' && encoded_string[idx] <= (uint8_t)'F'){
-			val = encoded_string[idx] - (uint8_t)'A' + 10;
+		else if (c >= (uint8_t)'A' && c <= (uint8_t)'F'){
+			val = c - (uint8_t)'A' + 10;
 		}
-		else if (encoded_string[idx] >= (uint8_t)'a' && encoded_string[idx] <= (uint8_t)'f'){
-			val = encoded_string[idx] - (uint8_t)'a' + 10;
+		else if (c >= (uint8_t)'a' && c <= (uint8_t)'f'){
+			val = c - (uint8_t)'a' + 10;
 		}
 		else{
 			throw new std::exception("Bad HEX(base16) encoding");
 		}
 
-		if (idx & 1 == 0){ // even
-			decode[idx >> 1] = val;
+		if (idx % 2 == 0){ // even
+			decode[idx / 2] = val << 4;
 		}
 		else{ // odd
-			decode[idx >> 1] |= val << 4;
+			decode[idx / 2] |= val;
 		}
 		idx++;
 	}
