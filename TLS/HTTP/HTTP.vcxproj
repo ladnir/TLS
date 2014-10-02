@@ -64,6 +64,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AES.cpp" />
     <ClCompile Include="BlockCypher.cpp" />
     <ClCompile Include="Client.cpp" />
     <ClCompile Include="DES.cpp" />
@@ -72,6 +73,7 @@
     <ClCompile Include="Server.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AES.h" />
     <ClInclude Include="BlockCypher.h" />
     <ClInclude Include="Client.h" />
     <ClInclude Include="DES.h" />

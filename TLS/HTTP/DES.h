@@ -16,7 +16,7 @@ public:
 
 protected:	
 
-	DES( Mode mode);
+	DES( Mode mode); // for tripleDES.
 
 	virtual void blockOperate(const uint8_t* src,
                                     uint8_t* dest,
