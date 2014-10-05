@@ -105,7 +105,7 @@ std::string base16_encode(uint8_t const* bytesToEncode, uint32_t byteLength)
 	std::string encoding("0x");
 	uint8_t idx;
 
-	for (int i = 0; i < byteLength; i++)
+    for (uint32_t i = 0; i < byteLength; i++)
 	{
 		idx = bytesToEncode[i] & 0xF0;
 		encoding += base16_chars[idx];
@@ -123,7 +123,7 @@ std::vector<uint8_t> base16_decode(std::string const& encoded_string)
 
 	assert(encoded_string.size() % 2 == 0 ); // is even
 
-	int idx = 0;
+	unsigned int idx = 0;
 	if (encoded_string.size() >= 2){
 		if (encoded_string[0] == '0' && encoded_string[1] == 'x')
 		{

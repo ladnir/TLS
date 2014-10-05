@@ -63,7 +63,9 @@ void BlockCypher::decrypt(const uint8_t*  cypherText,
 		if (i > 8){
 			throw new std::exception("bad padding exception, did not find 0x80 at the end.");
 		}
-		if (plainText[blockCount * mBlockSize - i++] != 0){
+        uint8_t t = plainText[blockCount * mBlockSize - i++];
+
+		if ( t != 0){
 			throw new std::exception("bad padding exception, does not have 0x00 at the end");
 		}
 	} while (plainText[blockCount * mBlockSize - i] != 0x80);

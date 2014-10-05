@@ -20,13 +20,22 @@ protected:
 
     static void computeKeySchedule(const uint8_t* key, const KeySize keySize, uint8_t schedule[][4]);
 
-    static void shiftRow(uint8_t state[][4]);
-    static void subState(uint8_t state[][4]);
+    static void mixColumn(uint8_t state[][4]);
+    static void shiftRows(uint8_t state[][4]);
+    static void subState(uint8_t state[][4], const uint8_t box[16][16]);
     static void addRoundKey(uint8_t state[][4], uint8_t word[][4]);
-    static void subWord(uint8_t* word);
+
+    static void invMixColumn(uint8_t state[][4]);
+    static void invShiftRows(uint8_t state[][4]);
+
+    static uint8_t dot(uint8_t x, uint8_t y);
+    static void subWord(uint8_t* word, const uint8_t box[16][16]);
     static void rolWord(uint8_t* word);
+
     int mRounds;
-    static const char sBox[16][16];
+
+    static const uint8_t sBox[16][16];
+    static const uint8_t invSBox[16][16];
 
 };
 
