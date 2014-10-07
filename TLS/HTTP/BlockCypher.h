@@ -30,7 +30,7 @@ public:
 				 const size_t    cypherTextLength,
 				 const uint8_t*  iv,
                        uint8_t*  plainText,
-                       uint32_t& plainTextLength);
+					   size_t&   plainTextLength);
 
 	void blockEncrypt(const uint8_t* plainText,
 		uint8_t* cypherText);

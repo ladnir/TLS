@@ -4,7 +4,7 @@
 #include "DES.h"
 #include "AES.h"
 #include <iomanip>
-#include "LNA.cpp"
+#include "LNA.h"
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -22,21 +22,22 @@ bool init()
     return true;
 }
 
-
 int main(int argc, char** argv)
 {
-    vector<int> source1 = { 1, 11 };
-    vector<int> source2 = { 0, 1 };
+	typedef uint16_t T;
 
-    LNA<int> num1(source1);
-    LNA<int> num2(source2);
+	vector<T> source1 = { 0,0, (T)2 , 0};
+    vector<T> source2 = {(T)-1 };
+
+    LNA<T> num1(source1);
+    LNA<T> num2(source2);
 
     cout << num1 << endl;
     cout << num2 << endl;
-    LNA<int>::add(num1, num2);
-
-    cout << num1 << endl;
-
+ 	while (1){
+		LNA<T>::subtract(num1, num2);
+		cout << num1 << endl;
+	}
 	return 1;
 
     //if(init()){

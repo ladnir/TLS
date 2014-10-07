@@ -23,7 +23,7 @@ void BlockCypher::encrypt(const uint8_t* plainText,
 	                      const uint8_t* iv,
 	                            uint8_t* cypherText)
 {
-	int paddedLength = mBlockSize - (plainTextLength % mBlockSize) + plainTextLength;
+	size_t paddedLength = mBlockSize - (plainTextLength % mBlockSize) + plainTextLength;
 	uint8_t* paddedPlaintext = new uint8_t[paddedLength];
 
 	memset(paddedPlaintext, 0x0, paddedLength); // optimie this memset
@@ -52,7 +52,7 @@ void BlockCypher::decrypt(const uint8_t*  cypherText,
 	                      const size_t    cypherTextLength,
 	                      const uint8_t*  iv,
 	                            uint8_t*  plainText,
-	                            uint32_t& plainTextLength)
+	                            size_t& plainTextLength)
 {
 	size_t blockCount = cypherTextLength / mBlockSize;
 

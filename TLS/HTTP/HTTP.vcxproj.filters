@@ -54,9 +54,6 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Eliptic-Curve\ECC\ECC\Fields.cpp">
-      <Filter>Source Files\Public Key Crypto</Filter>
-    </ClCompile>
     <ClCompile Include="LNA.cpp">
       <Filter>Source Files\Public Key Crypto</Filter>
     </ClCompile>
@@ -82,9 +79,6 @@
     </ClInclude>
     <ClInclude Include="Server.h">
       <Filter>Header Files\HTTP</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Eliptic-Curve\ECC\ECC\Fields.h">
-      <Filter>Header Files\Public Key Crypto</Filter>
     </ClInclude>
     <ClInclude Include="LNA.h">
       <Filter>Header Files\Public Key Crypto</Filter>
