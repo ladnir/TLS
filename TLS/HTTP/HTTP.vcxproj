@@ -64,21 +64,25 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\Eliptic-Curve\ECC\ECC\Fields.cpp" />
     <ClCompile Include="AES.cpp" />
     <ClCompile Include="BlockCypher.cpp" />
     <ClCompile Include="Client.cpp" />
     <ClCompile Include="DES.cpp" />
-    <ClCompile Include="HTTP.cpp" />
+    <ClCompile Include="LNA.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="HttpUtil.cpp" />
     <ClCompile Include="Server.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\Eliptic-Curve\ECC\ECC\Fields.h" />
     <ClInclude Include="AES.h" />
     <ClInclude Include="BlockCypher.h" />
     <ClInclude Include="Client.h" />
     <ClInclude Include="DES.h" />
     <ClInclude Include="Header.h" />
     <ClInclude Include="HttpUtil.h" />
+    <ClInclude Include="LNA.h" />
     <ClInclude Include="Server.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

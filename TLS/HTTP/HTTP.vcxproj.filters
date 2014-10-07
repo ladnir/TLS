@@ -13,51 +13,81 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\HTTP">
+      <UniqueIdentifier>{4a3003c4-5b7e-4e68-b502-03752fbfbe47}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\HTTP">
+      <UniqueIdentifier>{b4fa8efa-04da-43ff-b178-dabac763520b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Public Key Crypto">
+      <UniqueIdentifier>{592a52a7-cdc0-4a2e-a4e4-05c3a48a90f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Block Cyphers">
+      <UniqueIdentifier>{b84f3776-0653-4ea5-8945-5dbf7a1d1f1a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Block Cyphers">
+      <UniqueIdentifier>{b0a25209-4402-4d53-9c61-4e8c8b1ea62b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Public Key Crypto">
+      <UniqueIdentifier>{2cce8e6b-07ac-4daa-9125-04e865c62359}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="HTTP.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Server.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Client.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="HttpUtil.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="BlockCypher.cpp">
+      <Filter>Source Files\Block Cyphers</Filter>
     </ClCompile>
     <ClCompile Include="DES.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BlockCypher.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Block Cyphers</Filter>
     </ClCompile>
     <ClCompile Include="AES.cpp">
+      <Filter>Source Files\Block Cyphers</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpUtil.cpp">
+      <Filter>Source Files\HTTP</Filter>
+    </ClCompile>
+    <ClCompile Include="Server.cpp">
+      <Filter>Source Files\HTTP</Filter>
+    </ClCompile>
+    <ClCompile Include="Client.cpp">
+      <Filter>Source Files\HTTP</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Eliptic-Curve\ECC\ECC\Fields.cpp">
+      <Filter>Source Files\Public Key Crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="LNA.cpp">
+      <Filter>Source Files\Public Key Crypto</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Server.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Header.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Client.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="HttpUtil.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DES.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="AES.h">
+      <Filter>Header Files\Block Cyphers</Filter>
     </ClInclude>
     <ClInclude Include="BlockCypher.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Block Cyphers</Filter>
     </ClInclude>
-    <ClInclude Include="AES.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="DES.h">
+      <Filter>Header Files\Block Cyphers</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpUtil.h">
+      <Filter>Header Files\HTTP</Filter>
+    </ClInclude>
+    <ClInclude Include="Client.h">
+      <Filter>Header Files\HTTP</Filter>
+    </ClInclude>
+    <ClInclude Include="Server.h">
+      <Filter>Header Files\HTTP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Eliptic-Curve\ECC\ECC\Fields.h">
+      <Filter>Header Files\Public Key Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="LNA.h">
+      <Filter>Header Files\Public Key Crypto</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
