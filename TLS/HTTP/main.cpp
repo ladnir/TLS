@@ -28,7 +28,7 @@ int main(int argc, char** argv)
 
 	vector<T> source1 = { 0,0, (T)2 , 0};
     vector<T> source2 = {(T)-1 };
-
+	
     LNA<T> num1(source1);
     LNA<T> num2(source2);
 

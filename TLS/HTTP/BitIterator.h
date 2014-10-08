@@ -56,7 +56,7 @@ void BitIterator<T>::goToBit(const int& idx)
 template<class T>
 void BitIterator<T>::goToMSB()
 {
-	goToBit(mNumber.mWordSize * mNumber.mWorkCount - 1);
+	goToBit(mNumber.mWordSize * mNumber.mWordCount - 1);
 }
 
 template<class T>

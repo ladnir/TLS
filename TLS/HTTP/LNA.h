@@ -6,7 +6,7 @@ template<class T>
 class LNA
 {
 public:
-    LNA(std::vector<T>&);
+    LNA(const std::vector<T>&);
     LNA();
     ~LNA();
 
@@ -14,13 +14,14 @@ public:
 	static void subtract(LNA<T>& target, const LNA<T>& source);
 	static void multiply(LNA<T>& target, const LNA<T>& source);
 
-    void resize(uint32_t);
+	void resize(size_t);
 	bool retract();
 
-	T& operator[](const uint32_t&) const;
+	T& operator[](const size_t&) const;
 	bool operator>=(const LNA<T>&)const;
-
-    size_t mWorkCount;
+	LNA<T>& operator=(const LNA<T>&);
+	LNA<T>& operator<<(int size_t& bits);
+    size_t mWordCount;
 	size_t mWordSize;
 
     T* mNum;
@@ -33,21 +34,24 @@ public:
 
 
 template<class T>
-LNA<T>::LNA(std::vector<T>& source)
+LNA<T>::LNA(const std::vector<T>& source)
 {
 	mWordSize = sizeof(T);
-	mWorkCount = source.size();
-	mNum = new T[mWorkCount];
+	mWordCount = source.size();
+	mNum = new T[mWordCount];
 
-	memcpy(mNum, &source[0], mWorkCount * sizeof(T));
+	for (size_t i = 0; i < mWordCount; i++){
+		mNum[i] = source[mWordCount - i - 1];
+	}
+
 }
 
 template<class T>
 LNA<T>::LNA()
 {
 	mWordSize = sizeof(T);
-	mWorkCount = 1;
-	mNum = new T[mWorkCount];
+	mWordCount = 1;
+	mNum = new T[mWordCount];
 }
 
 template<class T>
@@ -57,24 +61,24 @@ LNA<T>::~LNA()
 }
 
 template<class T>
-void LNA<T>::resize(uint32_t size)
+void LNA<T>::resize(size_t size)
 {
-	assert(size > mWorkCount);
+	assert(size > mWordCount);
 
 	T* temp = mNum;
 	mNum = new T[size](); // zero initialized
 
-	memcpy(mNum + (size - mWorkCount), temp, mWorkCount * sizeof(T)); // copy old value;
+	memcpy(mNum , temp, mWordCount * sizeof(T)); // copy old value;
 
 	delete temp;
-	mWorkCount = size;
+	mWordCount = size;
 }
 
 template<class T>
 bool LNA<T>::retract()
 {
-	size_t half = mWorkCount / 2;
-	for (int i = 0; i < half; i++){
+	size_t half = mWordCount / 2;
+	for (size_t i = mWordCount - 1; i > half; i--){
 		if (mNum[i])
 			return false; // atleast half full
 	}
@@ -82,55 +86,66 @@ bool LNA<T>::retract()
 	T* temp = mNum;
 	mNum = new T[half];
 	for (int i = 0; i < half; i++){
-		mNum[i] = temp[half + i];
+		mNum[i] = temp[i];
 	}
 	delete temp; 
-	mWorkCount = half;
+	mWordCount = half;
 	return true;
+}
+
+template<class T>
+static void multiply(LNA<T>& target, const LNA<T>& source)
+{
+	BitIterator<T> srcIter(source);
+
+	
 }
 
 template<class T>
 void LNA<T>::add(LNA<T>& target,const LNA<T>& source)
 {
-	if (target.mWorkCount < source.mWorkCount){
-		target.resize(source.mWorkCount);
+	if (target.mWordCount < source.mWordCount){
+		target.resize(source.mWordCount);
 	}
 
 	T carry = 0;
 	T t1;
 	
-	for (int tIdx = target.mWorkCount - 1,
-			 sIdx = source.mWorkCount - 1;
-		sIdx >= 0;
-		sIdx--, tIdx--)
+	for (size_t idx = 0; idx < source.mWordCount; idx++)
 	{
-		if (source[sIdx] || carry){
-			t1 = target[tIdx];
-			target[tIdx] += source[sIdx] + carry;
+		if (source[idx] || carry){
+			t1 = target[idx];
+			target[idx] += source[idx] + carry;
 			//cout << target << endl;
-			carry = (target[tIdx] <= t1) ? 1 : 0;
+			carry = (target[idx] <= t1) ? 1 : 0;
 		}
 	}
 
+	// target  ##############             
+	// source  ######
+	// cur pos       ^
+	//
+	// If we still have a carry, we have to place it in target's high words.
+
 	if (carry){
 
-		if (target.mWorkCount == source.mWorkCount){
+		if (target.mWordCount == source.mWordCount){
 			// expand target and set its top work to 1
-			target.resize(target.mWorkCount + 1);
-			target[0]++;
+			target.resize(target.mWordCount + 1);
+			target[target.mWordCount - 1]++;
 		}
 		else{
 			// keep applying the carry to target
-			for (int32_t i = target.mWorkCount - source.mWorkCount -1;i >= 0; i--){
+			for (size_t i = source.mWordCount;i < target.mWordCount; i++){
 				target[i]++;
 				if (target[i]) // if its non zero, we can stop since there are no more carries
 					return; // all done
 			}
 
 			// Need to resize to fit the last carry
-			if (target[0] == 0){
-				target.resize(target.mWorkCount + 1);
-				target[0] ++;
+			if (target[target.mWordCount - 1] == 0){
+				target.resize(target.mWordCount + 1);
+				target[target.mWordCount - 1] ++;
 			}
 		}
 	}
@@ -141,25 +156,24 @@ template<class T>
 void LNA<T>::subtract(LNA<T>& target, const LNA<T>& source)
 {
 	//assert(target >= source && "cant be negative");
-
-	size_t tIdx = target.mWorkCount - source.mWorkCount;
+	assert(target.mWordCount >= source.mWordCount && "NOT IMPLEMENTED: subtraction resulted in a negative number"); 
 	T t1;
 
-	for (size_t sIdx = 0; sIdx < source.mWorkCount; sIdx++, tIdx++){
-		t1 = target[tIdx];
-		target[tIdx] -= source[sIdx];
+	for (size_t idx = source.mWordCount - 1; idx != (size_t) -1; idx--){
+		t1 = target[idx];
+		target[idx] -= source[idx];
 
-		if (target[tIdx] > t1){
+		if (target[idx] > t1){
 			// borrow from above
 			size_t i;
-			for (i = tIdx - 1; 1; i--){
-				assert(i != (size_t)-1 && "NOT IMPLEMENTED: subtraction resulted in a negative number"); // assert i >= 0
+			for (i = idx + 1; 1; i++){
+				assert(i < target.mWordCount && "NOT IMPLEMENTED: subtraction resulted in a negative number"); // assert i >= 0
 
 				if (target[i]){
 					target[i] --; // found somewhere to borrow from.
 
-					for (; i > tIdx - 1;i--){ // set all intermidiate values to the max value
-						target[i] = (T)-1; //  target[i] = 9999...
+					for (i--; i > idx ;i--){ // set all intermidiate values to the max value
+						target[i] = (T)-1; //  target[i] = ffff...
 					}
 					break;
 				}
@@ -174,36 +188,60 @@ void LNA<T>::subtract(LNA<T>& target, const LNA<T>& source)
 template<class T>
 T& LNA<T>::operator[](const uint32_t& idx) const
 {
-	assert(idx < mWorkCount);
+	assert(idx < mWordCount);
 	return mNum[idx];
+}
+
+template<class T>
+LNA<T>& LNA<T>::operator<<(const size_t& shifts)
+{
+	
 }
 
 template<class T>
 bool LNA<T>::operator>=(const LNA<T>& cmp) const
 {
-	int i;
-	for (i = 0; i < mWorkCount - cmp.mWorkCount; i++){
+	size_t i;
+	for (i = mWordCount - 1; i >= cmp.mWordCount; i--){
 		if (mNum[i])
 			return true; // strickly greater than. has higher, non zero, words.
 	}
 
-	for (int j = 0; j < cmp.mWorkCount; j++, i++){
+	for (size_t j = cmp.mWordCount - 1; j != (size_t)-1; j--){
 		if (mNum[i] > cmp[j])
 			return true; // strickly greater than
 		if (mNum[i] < cmp[j])
-			return false; // strickly less than
+			return false; //  strickly less than
 	}
 	return true; // equal
 }
+
+template<class T>
+LNA<T>& LNA<T>::operator=(const LNA<T>& rhs)
+{
+	if (mWordCount < rhs.mWordCount)
+	{
+		delete mNum;
+		mNum = new T[rhs.mWordCount];
+		mWordCount = rhs.mWordCount;
+	}
+	else if (mWordCount > rhs.mWordCount){
+		memset(mNum + rhs.mWordCount, 0, mWordCount - rhs.mWordCount); // set high words to zero.
+	}
+	memcpy(mNum, rhs.mNum, rhs.mWordCount);
+	this->retract();
+}
+
 template<class T>
 std::ostream& operator << (std::ostream& stream, const  LNA<T>& num)
 {
 	int width = 2 * sizeof(T);
 	
-	for (uint32_t i = 0; i < num.mWorkCount; i++){
+	for (size_t i = num.mWordCount - 1; i != (size_t)-1; i--){
 		cout << setfill('0') << setw(width) << std::hex << num[i];
 	}
 	cout << "'";
 
 	return stream;
 }
+
