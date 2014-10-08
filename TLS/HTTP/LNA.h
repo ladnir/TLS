@@ -12,6 +12,7 @@ public:
 
     static void add(LNA<T>& target,const LNA<T>& source);
 	static void subtract(LNA<T>& target, const LNA<T>& source);
+	static void multiply(LNA<T>& target, const LNA<T>& source);
 
     void resize(uint32_t);
 	bool retract();
@@ -19,7 +20,9 @@ public:
 	T& operator[](const uint32_t&) const;
 	bool operator>=(const LNA<T>&)const;
 
-    uint32_t mWorkCount;
+    size_t mWorkCount;
+	size_t mWordSize;
+
     T* mNum;
 };
 
@@ -32,6 +35,7 @@ public:
 template<class T>
 LNA<T>::LNA(std::vector<T>& source)
 {
+	mWordSize = sizeof(T);
 	mWorkCount = source.size();
 	mNum = new T[mWorkCount];
 
@@ -41,6 +45,7 @@ LNA<T>::LNA(std::vector<T>& source)
 template<class T>
 LNA<T>::LNA()
 {
+	mWordSize = sizeof(T);
 	mWorkCount = 1;
 	mNum = new T[mWorkCount];
 }

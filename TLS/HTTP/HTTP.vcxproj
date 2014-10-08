@@ -127,6 +127,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AES.h" />
+    <ClInclude Include="BitIterator.h" />
     <ClInclude Include="BlockCypher.h" />
     <ClInclude Include="Client.h" />
     <ClInclude Include="DES.h" />
