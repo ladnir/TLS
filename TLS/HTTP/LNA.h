@@ -12,15 +12,27 @@ public:
 
     static void add(LNA<T>& target,const LNA<T>& source);
 	static void subtract(LNA<T>& target, const LNA<T>& source);
-	static void multiply(LNA<T>& target, const LNA<T>& source);
 
+	static void multiply(const LNA<T>& multiplicand, 
+						 const LNA<T>& multiplier, 
+							   LNA<T>& product);
+
+    static void division(const LNA<T>& dividend,
+						 const LNA<T>& divisor,
+							   LNA<T>& quotient,
+							   LNA<T>& remainder);
 	void resize(size_t);
 	bool retract();
+    void clear();
 
-	T& operator[](const size_t&) const;
-	bool operator>=(const LNA<T>&)const;
-	LNA<T>& operator=(const LNA<T>&);
-	LNA<T>& operator<<(int size_t& bits);
+	T&      operator[]  (const size_t&)const;
+    bool    operator>=  (const LNA<T>&)const;
+    bool    operator==  (const LNA<T>&)const;
+    LNA<T>& operator=   (const LNA<T>&);
+    void    operator+=  (const LNA<T>&);
+    void    operator*=  (const LNA<T>&);
+	void    operator<<= (const size_t& bits);
+
     size_t mWordCount;
 	size_t mWordSize;
 
@@ -31,12 +43,12 @@ public:
 #include <string.h>
 #include <ostream>
 #include <iomanip>
-
+#include "BitIterator.h"
 
 template<class T>
 LNA<T>::LNA(const std::vector<T>& source)
 {
-	mWordSize = sizeof(T);
+	mWordSize = sizeof(T) * 8;
 	mWordCount = source.size();
 	mNum = new T[mWordCount];
 
@@ -51,13 +63,14 @@ LNA<T>::LNA()
 {
 	mWordSize = sizeof(T);
 	mWordCount = 1;
-	mNum = new T[mWordCount];
+	mNum = new T[mWordCount]();
 }
 
 template<class T>
 LNA<T>::~LNA()
 {
-	delete mNum;
+    if (mNum != nullptr)
+    	delete mNum;
 }
 
 template<class T>
@@ -94,11 +107,74 @@ bool LNA<T>::retract()
 }
 
 template<class T>
-static void multiply(LNA<T>& target, const LNA<T>& source)
+void LNA<T>::multiply(const LNA<T>& multiplicand, 
+				      const LNA<T>& multiplier, 
+					        LNA<T>& product)
 {
-	BitIterator<T> srcIter(source);
+    product.clear();
+    BitIterator<T> srcIter(source);
 
-	
+    while (srcIter.isInRnage()){
+        if (*srcIter){
+            product += target;
+            target <<= 1;
+        }
+        ++srcIter;
+    } 
+}
+
+template<class T>
+void LNA<T>::division(const LNA<T>& dividend,
+					  const LNA<T>& divisor,
+					        LNA<T>& quotient,
+					        LNA<T>& remainder)
+{
+    assert(!divisor.isZero() && "Divide by zero error.");
+    quotient.clear();
+    if (dividend.isZero()){
+        remainder.clear();
+        return;
+    }
+
+    LNA<T> divisorShift(divisor);
+    BitIterator<T> quotientIter(quotient);
+    BitIterator<T> dividentIter(dividend);
+    BitIterator<T> divisorIter(divisor);
+    remainder.copy(dividend);
+
+    size_t dividendLeadingZeros = 0;
+    size_t divisorLeadingZeros = 0;
+
+    dividentIter.goToMSB();
+    while (*dividentIter == 0){
+        --dividentIter;
+        dividendLeadingZeros++;
+    }
+
+    divisorIter.goToMSB();
+    while (*divisorIter == 0){
+        --divisorIter;
+        divisorLeadingZeros++;
+    }
+
+    size_t shifts = dividend.mWordCount * dividend.mWordSize
+                  - divisor.mWordCount  * divisor.mWordSize
+                  - dividendLeadingZeros 
+                  + divisorLeadingZeros;
+
+    quotientIter.goToBit(shifts);
+    divisorShift <<= shifts;
+
+    while (shifts != (size_t)-1){
+        if (divisorShift <= remainder){
+            remainder -= divisorShift;
+            quotientIter.flipBit();
+        }
+
+        --quotientIter;
+        divisorShift>>=1;
+        shifts--;
+    }
 }
 
 template<class T>
@@ -193,9 +269,50 @@ T& LNA<T>::operator[](const uint32_t& idx) const
 }
 
 template<class T>
-LNA<T>& LNA<T>::operator<<(const size_t& shifts)
+void LNA<T>::operator<<=(const size_t& shifts)
 {
-	
+    assert(shifts < mWordCount * mWordSize);
+    size_t s = shifts;
+    size_t step = (s > mWordSize) ? mWordSize : s;
+
+    size_t wordsAdded = shifts + (mWordSize - 1) / mWordSize; 
+    
+    for (size_t i = mWordCount - 1; mNum[i] == 0 && wordsAdded && i != (T)-1; i--) wordsAdded--;   
+    if (wordsAdded) resize(mWordCount + wordsAdded);
+
+    while (s){
+        T shiftIn;
+        for (size_t i = mWordCount - 1; i > 0; i--){
+            mNum[i] <<= step;
+            shiftIn = mNum[i - 1] >> (sizeof(T)* 8 - step);
+            mNum[i] ^= shiftIn;
+        }
+        mNum[0] <<= step;
+        s -= step;
+        step = (s > mWordSize) ? mWordSize : s;
+    }
+}
+
+
+template<class T>
+bool LNA<T>::operator==(const LNA<T>& cmp) const
+{
+    size_t min = (mWordCount > cmp.mWordCount)? cmp.mWordCount : mWordCount;
+    size_t i;
+
+    for (i = 0; i < min; i++){
+        if (mNum[i] != cmp.mNum[i])
+            return false;
+    }
+
+    for (; i < mWordCount; i++){ 
+        if (mNum[i])
+            return false;
+    }
+    for (; i < cmp.mWordCount; i++){
+        if (cmp.mNum[i])
+            return false;
+    }
 }
 
 template<class T>
@@ -214,6 +331,18 @@ bool LNA<T>::operator>=(const LNA<T>& cmp) const
 			return false; //  strickly less than
 	}
 	return true; // equal
+}
+
+template<class T>
+void LNA<T>::operator+=(const LNA<T>& op)
+{
+    add(*this, op);
+}
+
+template<class T>
+void LNA<T>::operator*=(const LNA<T>& op)
+{
+    multiply(*this, op);
 }
 
 template<class T>

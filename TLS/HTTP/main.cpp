@@ -26,8 +26,8 @@ int main(int argc, char** argv)
 {
 	typedef uint16_t T;
 
-	vector<T> source1 = { 0,0, (T)2 , 0};
-    vector<T> source2 = {(T)-1 };
+    vector<T> source1 = { (T)1, (T)-1 };
+    vector<T> source2 = {(T)3 };
 	
     LNA<T> num1(source1);
     LNA<T> num2(source2);
@@ -35,8 +35,8 @@ int main(int argc, char** argv)
     cout << num1 << endl;
     cout << num2 << endl;
  	while (1){
-		LNA<T>::subtract(num1, num2);
-		cout << num1 << endl;
+		num1 *= num2;
+        cout << num1 << endl;
 	}
 	return 1;
 
