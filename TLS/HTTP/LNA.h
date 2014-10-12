@@ -7,7 +7,8 @@ class LNA
 {
 public:
     LNA(const std::vector<T>&);
-    LNA();
+	LNA(const LNA<T>&);
+	LNA();
     ~LNA();
 
     static void add(LNA<T>& target,const LNA<T>& source);
@@ -59,6 +60,15 @@ LNA<T>::LNA(const std::vector<T>& source)
 }
 
 template<class T>
+LNA<T>::LNA(const LNA<T>& src)
+{
+	mNum = new T[src.mWordCount];
+	mWordCount = src.mWordCount;
+	mWordSize = src.mWordSize;
+
+	memcpy(mNum, src.mNum, src.mWordCount * src.mWordSize);
+}
+template<class T>
 LNA<T>::LNA()
 {
 	mWordSize = sizeof(T);
@@ -107,19 +117,26 @@ bool LNA<T>::retract()
 }
 
 template<class T>
+void LNA<T>::clear()
+{
+	memset(mNum, 0,mWordCount * mWordSize);
+}
+
+template<class T>
 void LNA<T>::multiply(const LNA<T>& multiplicand, 
 				      const LNA<T>& multiplier, 
 					        LNA<T>& product)
 {
     product.clear();
-    BitIterator<T> srcIter(source);
+	LNA<T> multShift(multiplier);
+	BitIterator<T> multIter(multiplicand);
 
-    while (srcIter.isInRnage()){
-        if (*srcIter){
-            product += target;
-            target <<= 1;
+	while (multIter.isInRnage()){
+		if (*multIter){
+			product += multShift;
+			multShift <<= 1;
         }
-        ++srcIter;
+		++multIter;
     } 
 }
 
@@ -342,7 +359,12 @@ void LNA<T>::operator+=(const LNA<T>& op)
 template<class T>
 void LNA<T>::operator*=(const LNA<T>& op)
 {
-    multiply(*this, op);
+	LNA<T> sum;
+	multiply(*this, op, sum);
+
+	delete mNum;
+	mNum = sum.mNum;
+	sum.mNum = nullptr;
 }
 
 template<class T>

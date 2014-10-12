@@ -66,6 +66,15 @@ void BitIterator<T>::goToLSB()
     mMask = 1;
 }
 
+template<class T>
+bool BitIterator<T>::isInRnage() const
+{
+	return (mBitIdx >= 0 &&
+		    mWordIdx >= 0 && 
+		    mBitIdx < mNumber.mWordSize &&
+			mWordIdx < mNumber.mWordCount);
+}
+
 //template<class T>
 //bool BitIterator<T>::hasLesserBits() const
 //{
@@ -83,7 +92,7 @@ void BitIterator<T>::goToLSB()
 template<class T>
 bool BitIterator<T>::operator*() const
 {
-    return ((mNumber(mWordIdx) & mMask) != 0);
+    return ((mNumber[mWordIdx] & mMask) != 0);
 }
 
 template<class T>
