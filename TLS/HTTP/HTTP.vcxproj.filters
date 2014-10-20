@@ -57,6 +57,9 @@
     <ClCompile Include="LNA.cpp">
       <Filter>Source Files\Public Key Crypto</Filter>
     </ClCompile>
+    <ClCompile Include="stackTrace.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Header.h">
@@ -85,6 +88,9 @@
     </ClInclude>
     <ClInclude Include="BitIterator.h">
       <Filter>Header Files\Public Key Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="stackTrace.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

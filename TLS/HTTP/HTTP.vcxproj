@@ -124,6 +124,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="HttpUtil.cpp" />
     <ClCompile Include="Server.cpp" />
+    <ClCompile Include="stackTrace.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AES.h" />
@@ -135,6 +136,7 @@
     <ClInclude Include="HttpUtil.h" />
     <ClInclude Include="LNA.h" />
     <ClInclude Include="Server.h" />
+    <ClInclude Include="stackTrace.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

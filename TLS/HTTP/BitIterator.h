@@ -48,8 +48,10 @@ void BitIterator<T>::goToBit(const int& idx)
 {
     mBitIdx = idx % mNumber.mWordSize;
     mWordIdx = idx / mNumber.mWordSize;
-
-    mMask <<= mBitIdx;
+    
+    mMask = 1 << mBitIdx;
+    assert(mMask);
+    assert(mWordIdx < mNumber.mWordCount);
 }
 
 template<class T>
@@ -92,6 +94,7 @@ bool BitIterator<T>::isInRnage() const
 template<class T>
 bool BitIterator<T>::operator*() const
 {
+    assert(mMask);
     return ((mNumber[mWordIdx] & mMask) != 0);
 }
 
@@ -162,19 +165,17 @@ bool BitIterator<T>::operator==(const BitIterator<T>& rhs) const
 template<class T>
 void BitIterator<T>::flipBit()
 {
-    mNumber(mWordIdx) ^= mMask;
+    mNumber[mWordIdx] ^= mMask;
 }
 
 template<class T>
 std::ostream& operator << (std::ostream& stream, const BitIterator<T>& bitIter)
 {
     BitIterator<T> scanner(bitIter);
-    BitIterator<T> lsb(bitIter);
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
     scanner.goToMSB();
-    lsb.goToLSB();
-    while (scanner >= lsb)
+    while (scanner.isInRnage())
     {
         if (scanner == bitIter) SetConsoleTextAttribute(hConsole, 2);
 
