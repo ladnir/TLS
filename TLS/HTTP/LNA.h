@@ -178,10 +178,10 @@ void LNA<T>::retract()
     size_t halfNewSize;
 
     // lets see if we can make it smaller; half, a quarter, an eigth, a sixteenth, ...
-    while (i){
+    while (i != (size_t)-1){
 
-         halfNewSize = newSize >> 2;
-        for (;i && i >= halfNewSize; i --){
+        halfNewSize = newSize >> 1;
+        for (;i != (size_t)-1 && i >= halfNewSize; i--){
             if (getWord(i) != 0)
             {
                 // We found a non zero word, lets see if we can retact
@@ -200,11 +200,9 @@ void LNA<T>::retract()
     }
 
     // special case, all zero array of size > 1
-    if (i == 0 && newSize != mWordCount){
-        delete mNum;
-        mNum = new T[1]();
-        mWordCount = 1;
-    }   
+    delete mNum;
+    mNum = new T[1]();
+    mWordCount = 1;
 }
 
 template<class T>
@@ -265,9 +263,19 @@ void LNA<T>::multiply(const LNA<T>& multiplicand,
 
 	while (multIter.isInRnage()){
         //std::cout << multIter << endl;
-
 		if (*multIter){
-			product += multShift;
+            if (show){
+                cout << "  " << spacing(product, multShift) << product << endl;
+                cout << " +" << multShift << endl;
+                cout << "_______________________________________1" << endl;
+            }
+            product += multShift;
+            if (show){
+                cout << "  " << product << endl << endl;
+            }
+        }
+        else if (show){
+            cout << "                                       0" << endl;
         }
 		multShift <<= 1;
 		++multIter;
@@ -279,7 +287,7 @@ std::string spacing(const LNA<T>& printed, const LNA<T> cmp)
 {
     std::string ret;
     for (int i = printed.mWordCount; i < cmp.mWordCount; i++ )
-        ret += "    ";
+        ret += "        ";
 
     return ret;
 }
@@ -314,11 +322,12 @@ void LNA<T>::division(const LNA<T>& dividend,
     }
 
     divisorIter.goToMSB();
+    
     while (*divisorIter == 0){
         --divisorIter;
         divisorLeadingZeros++;
     }
-
+    cout << divisor << endl;
     int shifts = dividend.mWordCount * dividend.mWordSize
                   - divisor.mWordCount  * divisor.mWordSize
                   - dividendLeadingZeros 
@@ -346,7 +355,7 @@ void LNA<T>::division(const LNA<T>& dividend,
             if (show){
                 cout << "  " << spacing(remainder, divisorShift) <<  remainder << endl;
                 cout << " -" << divisorShift << endl;
-                cout << "_______________________________________" << endl;
+                cout << "_______________________________________1" << endl;
             }
             remainder -= divisorShift;
             if (show){
@@ -354,12 +363,14 @@ void LNA<T>::division(const LNA<T>& dividend,
             }
             quotientIter.flipBit();
         }
+        else if (show){
+            cout << "                                       0" << endl;
+        }
 
         --quotientIter;
-        divisorShift>>=1;
+        divisorShift >>= 1;
         shifts--;
     }
-    cout << "";
 }
 
 template<class T>
@@ -393,8 +404,9 @@ void LNA<T>::add(LNA<T>& target,const LNA<T>& source)
 
 		if (target.mWordCount == source.mWordCount){
 			// expand target and set its top work to 1
+            size_t carryIdx = target.mWordCount;
 			target.expand(target.mWordCount + 1);
-			target[target.mWordCount - 1]++;
+            target[carryIdx]++;
 		}
 		else{
 			// keep applying the carry to target
@@ -406,8 +418,9 @@ void LNA<T>::add(LNA<T>& target,const LNA<T>& source)
 
 			// Need to expand to fit the last carry
 			if (target[target.mWordCount - 1] == 0){
+                size_t carryIdx = target.mWordCount;
 				target.expand(target.mWordCount + 1);
-				target[target.mWordCount - 1] ++;
+                target[carryIdx] ++;
 			}
 		}
 	}
@@ -445,7 +458,6 @@ void LNA<T>::subtract(LNA<T>& target, const LNA<T>& source)
 			}
 		}
 	}
-
 	target.retract();
 }
 template<class T>
@@ -460,7 +472,7 @@ T& LNA<T>::getWord(const size_t idx) const
 }
 
 template<class T>
-T& LNA<T>::operator[](const uint32_t& idx) const
+T& LNA<T>::operator[](const size_t& idx) const
 {
 
     if (idx >= mWordCount)
@@ -703,10 +715,10 @@ void LNA<T>::randomize(size_t size)
 
     clearResize(size);
 
-    static std::default_random_engine generator;
-    static std::uniform_int_distribution<T> distribution(0, (T)-1);
+    //static std::default_random_engine generator;
+   // static std::uniform_int_distribution<T> distribution(0, (T)-1);
     for (size_t i = 0; i < mWordCount; i++)
-        getWord(i) = distribution(generator);
+        getWord(i) = rand();//distribution(generator);
 
 }
 
@@ -717,7 +729,7 @@ std::ostream& operator<< (std::ostream& stream, const  LNA<T>& num)
 	int width = 2 * sizeof(T);
 	
 	for (size_t i = num.mWordCount - 1; i != (size_t)-1; i--){
-		cout << setfill('0') << setw(width) << std::hex << num[i];
+		cout << setfill('0') << setw(width) << std::hex <<(uint16_t) num[i];
 	}
 	cout << "'";
 

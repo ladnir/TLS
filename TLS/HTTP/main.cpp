@@ -30,22 +30,23 @@ int main(int argc, char** argv)
     string s("main");
     stackTrace st(s);
 #endif
-	typedef uint16_t T;
+	typedef uint32_t T;
 
     /*vector<T> source1 = {7,0, (T)3 };
     vector<T> source2 = {(T)3 };*/
-    vector<T> source1 = { 99};
-    vector<T> source2 = { 19430 };
-    vector<T> source3 = { 0, 0, 99 };
+    vector<T> source1 = { 0x2, 0x4, 0x3, 0x2};
+    vector<T> source2 = { 0x4 };
+    vector<T> source3 = { 0 };
 	
     LNA<T> num1(source1);
     LNA<T> num2(source2);
     LNA<T> quo(source3),rem;
 
-    cout << "num1 " << num1 << endl;
-    num1 -= quo;
-    cout << "num1 " << num1 << endl;
-    
+    //cout << "num1  " << num1 << endl;
+    //cout << "num2- " << num2 << endl;
+   /* quo.retract();
+    cout << "num1 " << quo << endl;
+    */
     int i = 0;
     while (++i){
         //num1 >>= 3;
@@ -56,14 +57,13 @@ int main(int argc, char** argv)
             cout << "num1 " << num1 << endl;
             cout << "num2 " << num2 << endl;
 
-            if (i == 2)
-                LNA<T>::show = true;
-
             LNA<T>::division(num1, num2, quo, rem); 
 
             cout << "q " << quo << endl;
             cout << "r " << rem <<endl;
 
+            //if (i == 2)
+            //            LNA<T>::show = true;
             quo *= num2;
             quo += rem;
 
@@ -71,13 +71,17 @@ int main(int argc, char** argv)
             cout << "num1 " << num1 << endl;
             cout << endl;
 
-            assert(rem < num2);
+            if(!(rem < num2)){
+                assert(0 && "(rem < num2");
+                throw new std::exception();
+            }
             if (!(quo == num1)){
                 assert(0 && "quo == num1");
+                throw new std::exception();
             }
            // }
         }
-        size_t s1 = rand() % 3 + 1;
+        size_t s1 = rand() % 2 + 1;
         size_t s2 = rand() % 2 + 1;
         num1.randomize(s1);
         num2.randomize(s2);

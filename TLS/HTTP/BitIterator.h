@@ -25,7 +25,7 @@ public:
 
 	void flipBit();
 
-private:
+//private:
 	//const FiniteField<T>& mNumber;
 	const LNA<T>& mNumber;
 
@@ -49,7 +49,7 @@ void BitIterator<T>::goToBit(const int& idx)
     mBitIdx = idx % mNumber.mWordSize;
     mWordIdx = idx / mNumber.mWordSize;
     
-    mMask = 1 << mBitIdx;
+    mMask = ((T)1) << mBitIdx;
     assert(mMask);
     assert(mWordIdx < mNumber.mWordCount);
 }
