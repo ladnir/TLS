@@ -1,11 +1,13 @@
 #pragma once
+#include "LNA.h"
+#include <windows.h> // WinApi header
 
 template<class T>
 class BitIterator
 {
 public:
 	//BitIterator(const FiniteField<T>&);
-	BitIterator(const LNA<T>&);
+	BitIterator(const LNA&);
 
 	void goToBit(const int&);
 	void goToMSB();
@@ -27,16 +29,16 @@ public:
 
 //private:
 	//const FiniteField<T>& mNumber;
-	const LNA<T>& mNumber;
+	const LNA& mNumber;
 
-	T mMask;
+	LNA::T mMask;
 	int mWordIdx;
 	int mBitIdx;
 };
 
 
 template<class T>
-BitIterator<T>::BitIterator(const LNA<T>& field)
+BitIterator<T>::BitIterator(const LNA& field)
 : mNumber(field)
 , mWordIdx(0)
 , mBitIdx(0)
@@ -46,8 +48,8 @@ BitIterator<T>::BitIterator(const LNA<T>& field)
 template<class T>
 void BitIterator<T>::goToBit(const int& idx)
 {
-    mBitIdx = idx % mNumber.mWordSize;
-    mWordIdx = idx / mNumber.mWordSize;
+    mBitIdx = idx % (int) mNumber.mWordSize;
+    mWordIdx = idx / (int) mNumber.mWordSize;
     
     mMask = ((T)1) << mBitIdx;
     assert(mMask);
@@ -57,7 +59,7 @@ void BitIterator<T>::goToBit(const int& idx)
 template<class T>
 void BitIterator<T>::goToMSB()
 {
-    goToBit(mNumber.mWordCount * mNumber.mWordSize - 1);
+    goToBit((int)mNumber.mWordCount * (int)mNumber.mWordSize - 1);
 }
 
 template<class T>
@@ -111,7 +113,7 @@ BitIterator<T>& BitIterator<T>::operator++()
         //	of the next work
         mWordIdx++;
         mBitIdx = 0;
-        mMask = 1;
+        mMask = (T)1;
     }
     //__asm{ rol mMask, 1 }
 
@@ -130,8 +132,8 @@ BitIterator<T>& BitIterator<T>::operator--()
         // shift the mask to the start 
         //	of the next work
         mWordIdx--;
-        mBitIdx = mNumber.mWordSize - 1;
-        mMask = (T)(1 << (mNumber.mWordSize - 1));
+        mBitIdx = (int)mNumber.mWordSize - 1;
+        mMask = (T)(1) << (mNumber.mWordSize - 1);
     }
     //__asm{ ror mMask, 1 }
 

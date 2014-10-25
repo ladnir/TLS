@@ -23,14 +23,14 @@ bool Client::parseProxy(const string& proxy)
     if (proxy != ""){
         mProxy = true;
 
-        int hostStart, at, proxyPortStart;
+        size_t hostStart, at, proxyPortStart;
 
         hostStart = proxy.find("//") + 2;
         at = proxy.find("@");
-        if (at != -1)
+        if (at != (size_t )- 1)
         {
-            int userNameStart = hostStart;
-            int passwordStart = proxy.find(":", userNameStart) + 1;
+            size_t userNameStart = hostStart;
+            size_t passwordStart = proxy.find(":", userNameStart) + 1;
             hostStart = at + 1;
 
             mProxyUName = proxy.substr(userNameStart, passwordStart - userNameStart - 1);
@@ -44,7 +44,7 @@ bool Client::parseProxy(const string& proxy)
         mProxyHost = proxy.substr(hostStart);
         proxyPortStart = mProxyHost.find(":");
 
-        if (proxyPortStart != -1){
+        if (proxyPortStart != (size_t )- 1){
             mProxyPort = stoi(mProxyHost.substr(proxyPortStart + 1, mProxyHost.size() - 1));
             mProxyHost = mProxyHost.substr(0, proxyPortStart);
         }
@@ -62,7 +62,7 @@ bool Client::parseProxy(const string& proxy)
 
 bool Client::parseURL(const string& uri)
 {
-    int hostStart, pathStart, portStart;
+    size_t hostStart, pathStart, portStart;
 
     hostStart = uri.find("//") + 2;
     pathStart = uri.find("/", hostStart);
@@ -70,7 +70,7 @@ bool Client::parseURL(const string& uri)
     mHost = uri.substr(hostStart, pathStart - hostStart);
 
     portStart = mHost.find(":");
-    if (portStart != -1){
+    if (portStart != (size_t) - 1){
         mPort = stoi(mHost.substr(portStart + 1, mHost.size() - 1));
         mHost = mHost.substr(0, portStart);
     }
@@ -78,7 +78,7 @@ bool Client::parseURL(const string& uri)
         mPort = HTTP;
     }
 
-    if (pathStart != -1)
+    if (pathStart != (size_t)-1)
         mPath = uri.substr(pathStart + 1, uri.size() - pathStart - 1);
     else
         mPath = "";
@@ -92,22 +92,22 @@ bool Client::httpGet()
     if (mProxy) request = "GET HTTP://" + mHost + "/" + mPath + "HTTP/1.1\r\n";
     else        request = "GET " + mPath + " HTTP/1.1\r\n";
 
-    if (send(mClientConnection, request.c_str(), request.size(), 0) == SOCKET_ERROR)
+    if (send(mClientConnection, request.c_str(), (int)request.size(), 0) == SOCKET_ERROR)
         return false;
         
     if (mProxy){
         request = "Proxy-Authentication: BASIC " + base64_encode((uint8_t *)(mProxyUName + ":" + mProxyPassword).c_str(), mProxyUName.size() + 1 + mProxyPassword.size());
 
-        if (send(mClientConnection, request.c_str(), request.size(),0) == SOCKET_ERROR)
+        if (send(mClientConnection, request.c_str(), (int)request.size(), 0) == SOCKET_ERROR)
             return false;
     }
 
     request = "Host: " + mHost + "\r\n";
-    if (send(mClientConnection, request.c_str(), request.size(), 0) == SOCKET_ERROR)
+    if (send(mClientConnection, request.c_str(), (int)request.size(), 0) == SOCKET_ERROR)
         return false; 
 
     request = "Connection: close\r\n\r\n";
-    if (send(mClientConnection, request.c_str(), request.size(), 0) == SOCKET_ERROR)
+    if (send(mClientConnection, request.c_str(), (int)request.size(), 0) == SOCKET_ERROR)
         return false;
    
    
@@ -130,7 +130,7 @@ void Client::getResponce()
 
 bool Client::splitResponce(const string& responce, string& header, string& body)
 {
-    int split = responce.find("\r\n\r\n");
+    size_t split = responce.find("\r\n\r\n");
 
     header = responce.substr(0, split);
     body = responce.substr(split + 4, -1);

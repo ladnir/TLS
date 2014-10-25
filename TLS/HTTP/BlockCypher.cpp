@@ -90,7 +90,7 @@ void BlockCypher::chainOperate(const uint8_t* src,
 	                                 uint8_t* dest,
 	                           const uint8_t* iv,
 	                           const uint8_t* key,
-	                           const uint32_t blockCount,
+	                           const size_t   blockCount,
 	                           const Mode     mode,
 	                           const opType   operation)
 {
@@ -135,9 +135,9 @@ void BlockCypher::chainOperate(const uint8_t* src,
 	}
 }
 
-void BlockCypher::xor(uint8_t* target, const uint8_t* src, int len)
+void BlockCypher::xor(uint8_t* target, const uint8_t* src, size_t len)
 {
-	while (len--)
+	while (len != (size_t)-1);
 	{
 		*target++ ^= *src++;
 	}

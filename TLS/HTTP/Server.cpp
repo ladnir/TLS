@@ -18,8 +18,8 @@ Server::~Server()
 
 void Server::serverMain()
 {
-    int listenSocket;
-    int connectSocket;
+    SOCKET listenSocket;
+    SOCKET connectSocket;
 
     char mOn = 1;
     
@@ -108,7 +108,7 @@ void Server::buildErrorResponce(int connectionSocket)
 {
     std::string responce = "HTTP/1.1 501 Error Occured\r\n\r\n";
 
-    if (send(connectionSocket, responce.c_str(), responce.size(), 0) < (int)responce.size()){
+    if (send(connectionSocket, responce.c_str(), (int)responce.size(), 0) < (int)responce.size()){
         std::cerr << "Server, Trying to send responce." << std::endl;
     }
 }
@@ -123,7 +123,7 @@ void Server::buildSuccessResponce(int connectionSocket)
     responce += "\r\n";
     responce += "<html><head><title>Test Page</title></head><body>Test Page</body></html>\r\n";
 
-    if (send(connectionSocket, responce.c_str(), responce.size(), 0) < (int)responce.size()){
+    if (send(connectionSocket, responce.c_str(), (int)responce.size(), 0) < (int)responce.size()){
         std::cerr << "Server, Trying to send responce." << std::endl;
     }
     else{
