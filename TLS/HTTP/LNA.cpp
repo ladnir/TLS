@@ -1,57 +1,54 @@
 #include "BitIterator.h"
 #include "LNA.h"
+#include <algorithm>
 
-
-
-void myAssert(bool b)
-{
-    if (!b){
-        assert(b);
-    }
-}
-
-void myAssert(bool b, std::string message)
-{
-
-    if (!b){
-        assert(b);
-    }
-}
+//
+//void myAssert(bool b)
+//{
+//    if (!b){
+//        assert(b);
+//    }
+//}
+//
+//void myAssert(bool b, std::string message)
+//{
+//
+//    if (!b){
+//        assert(b);
+//    }
+//}
 
 using namespace std;
 
 bool LNA::show = false;
+const LNA LNA::one = LNA(1);
 
 
-LNA::LNA(const std::vector<T>& source)
-{
-#ifdef ST    
-    string s("LNA");
-    stackTrace st(s);
-#endif
+LNA::LNA(const T num){
     mWordSize = sizeof(T)* 8;
-
-    size_t pow2 = 1;
-    while (pow2 < source.size()){
-        pow2 <<= 1;
-    }
-
-    mWordCount = pow2;
+    mWordCount = 1;
     mNum = new T[mWordCount]();
 
-    for (size_t i = 0; i < source.size(); i++){
-        getWord(i) = source[source.size() - i - 1];
-    }
+    getWord(0) = num;
+}
 
+//template<class G>
+LNA::LNA(WordOrder wo, const vector<uint8_t>& source )
+{
+    vectorInit(wo, source.begin(), source.end());
+}
+
+//template<class R>
+LNA::LNA(WordOrder                  wo, 
+         vector<uint8_t>::const_iterator& start, 
+         vector<uint8_t>::const_iterator& end)
+{
+    vectorInit(wo, start, end);
 }
 
 
 LNA::LNA(const LNA& src)
 {
-#ifdef ST    
-    string s("LNA");
-    stackTrace st(s);
-#endif
     mNum = new T[src.mWordCount];
     mWordCount = src.mWordCount;
     mWordSize = src.mWordSize;
@@ -61,10 +58,6 @@ LNA::LNA(const LNA& src)
 
 LNA::LNA()
 {
-#ifdef ST    
-    string s("LNA");
-    stackTrace st(s);
-#endif
     mWordSize = sizeof(T)* 8;
     mWordCount = 1;
     mNum = new T[mWordCount]();
@@ -73,26 +66,48 @@ LNA::LNA()
 
 LNA::~LNA()
 {
-#ifdef ST    
-    string s("~LNA");
-    stackTrace st(s);
-#endif
     if (mNum != nullptr){
         delete mNum;
         mNum = nullptr;
     }
 }
 
+//template<class R>
+void LNA::vectorInit(WordOrder                  wo, 
+                     vector<uint8_t>::const_iterator& start, 
+                     vector<uint8_t>::const_iterator& end)
+{
+    if (mNum != nullptr)
+        delete mNum;
 
+    mWordSize = sizeof(T)* 8;
 
+    size_t sourceByteLength = ( end - start) * sizeof(uint8_t);
+
+    size_t pow2 = 1;
+    while (pow2 < sourceByteLength){
+        assert(pow2);
+        pow2 <<= 1;
+    }
+
+    mWordCount = (pow2 + sizeof(T) - 1) / sizeof(T);
+    mNum = new T[mWordCount]();
+
+    if (wo == WordOrder::LSWF){
+        memcpy(mNum, &(*start), sourceByteLength);
+    }
+    else{
+        vector<uint8_t> sourceReversed(start, end);
+        std::reverse(sourceReversed.begin(), sourceReversed.end());
+
+        memcpy(mNum, &sourceReversed[0], sourceByteLength);
+    }
+
+}
 
 void LNA::expand(size_t size)
 {
-#ifdef ST    
-    string s("expand");
-    stackTrace st(s);
-#endif
-    myAssert(size > mWordCount);
+    assert(size > mWordCount);
 
     size_t pow2 = 1;
     while (pow2 < size){
@@ -187,16 +202,16 @@ void LNA::copy(const LNA& src)
 
     memcpy(mNum, src.mNum, mWordCount * sizeof(T));
 }
-
-
-std::string spacing(const LNA& printed, const LNA cmp)
-{
-    std::string ret;
-    for (size_t i = printed.mWordCount; i < cmp.mWordCount; i++)
-        ret += "        ";
-
-    return ret;
-}
+//
+//
+//std::string spacing(const LNA& printed, const LNA cmp)
+//{
+//    std::string ret;
+//    for (size_t i = printed.mWordCount; i < cmp.mWordCount; i++)
+//        ret += "        ";
+//
+//    return ret;
+//}
 
 
 void LNA::multiply(const LNA& multiplicand,
@@ -213,32 +228,168 @@ void LNA::multiply(const LNA& multiplicand,
     while (multIter.isInRnage()){
         //std::cout << multIter << endl;
         if (*multIter){
-            if (show){
+            /*if (show){
                 cout << "  " << spacing(product, multShift) << product << endl;
                 cout << " +" << multShift << endl;
                 cout << "_______________________________________1" << endl;
-            }
+            }*/
             product += multShift;
-            if (show){
+           /* if (show){
                 cout << "  " << product << endl << endl;
-            }
+            }*/
         }
-        else if (show){
+       /* else if (show){
             cout << "                                       0" << endl;
-        }
+        }*/
         multShift <<= 1;
         ++multIter;
     }
 }
 
 
-void LNA::division(const LNA& dividend,
-    const LNA& divisor,
-    LNA& quotient,
-    LNA& remainder)
+void LNA::secureModExponentiate(const LNA& base, 
+                                const LNA& exponent, 
+                                const LNA& modulus, 
+                                      LNA& remainder)
+{
+    BitIterator<T> exponIter(exponent);
+    LNA temp1(base);
+    LNA temp2;
+    LNA temp3;
+
+    remainder = LNA::one;
+    
+    while (exponIter.isInRnage()){
+        if (*exponIter){
+            temp3 = remainder;
+            remainder *= temp1;
+            remainder %= modulus;
+        }
+        else{
+            temp3 = remainder; 
+            temp3 *= temp1;
+            temp3 %= modulus;
+        }
+
+        // square
+        temp2 = temp1;
+        temp1 *= temp2;
+        temp1 %= modulus;
+
+        ++exponIter;
+    }
+
+}
+
+void LNA::modExponentiate(const LNA& base, 
+                          const LNA& exponent, 
+                          const LNA& modulus, 
+                                LNA& remainder)
+{
+    BitIterator<T> exponIter(exponent);
+    LNA temp1(base);
+    LNA temp2;
+
+    remainder = LNA::one;
+
+    while (exponIter.isInRnage()){
+        if (*exponIter){
+            remainder *= temp1;
+            remainder %= modulus;
+        }
+
+        // square
+        temp2 = temp1;
+        temp1 *= temp2;
+        temp1 %= modulus;
+
+        ++exponIter;
+    }
+
+}
+
+void LNA::exponentiate(LNA& base,
+                       const LNA& exponent)
+{
+    BitIterator<T> exponIter(exponent);
+    LNA temp1(base);
+    LNA temp2;
+
+    base == LNA::one;
+
+    while (exponIter.isInRnage()){
+        if (*exponIter){
+            // multiply
+            base *= temp1;
+        }
+
+        // square
+        temp2 = temp1;
+        temp1 *= temp2;
+
+        ++exponIter;
+    }
+}
+
+void LNA::mod( LNA& dividendRemainder,
+               const LNA& divisor)
 {
 
-    myAssert(!divisor.isZero(), "Divide by zero error.");
+    assert(!divisor.isZero() && "Divide by zero error.");
+
+    if (dividendRemainder.isZero()){
+        return;
+    }
+
+    LNA divisorShift(divisor);
+    BitIterator<T> divisorIter(divisor);
+    BitIterator<T> dividentIter(dividendRemainder);
+
+    size_t dividendLeadingZeros = 0;
+    size_t divisorLeadingZeros = 0;
+
+    dividentIter.goToMSB();
+    while (*dividentIter == 0){
+        --dividentIter;
+        dividendLeadingZeros++;
+    }
+
+    divisorIter.goToMSB();
+
+    while (*divisorIter == 0){
+        --divisorIter;
+        divisorLeadingZeros++;
+    }
+
+    int shifts = static_cast<int>(dividendRemainder.mWordCount * dividendRemainder.mWordSize
+        - divisor.mWordCount  * divisor.mWordSize
+        - dividendLeadingZeros
+        + divisorLeadingZeros);
+
+    if (shifts < 0){
+        return;
+    }
+
+    divisorShift <<= shifts;
+
+
+    while (shifts != (size_t)-1){
+        if (divisorShift <= dividendRemainder){
+            dividendRemainder -= divisorShift;
+        }
+        divisorShift >>= 1;
+        shifts--;
+    }
+}
+
+
+void LNA::division(const LNA& dividend,
+                   const LNA& divisor,
+                   LNA& quotient,
+                   LNA& remainder)
+{
+
+    assert(!divisor.isZero() && "Divide by zero error.");
     quotient.clear();
     if (dividend.isZero()){
         remainder.clear();
@@ -268,9 +419,9 @@ void LNA::division(const LNA& dividend,
     }
 
     int shifts = static_cast<int>(dividend.mWordCount * dividend.mWordSize
-        - divisor.mWordCount  * divisor.mWordSize
-        - dividendLeadingZeros
-        + divisorLeadingZeros);
+                                - divisor.mWordCount  * divisor.mWordSize
+                                - dividendLeadingZeros
+                                + divisorLeadingZeros);
 
     if (shifts < 0){
         return;
@@ -280,36 +431,23 @@ void LNA::division(const LNA& dividend,
     quotient.clearResize(reqSize);
 
     quotientIter.goToBit(shifts);
-    if (show) cout << "b " << divisorShift << endl;
     divisorShift <<= shifts;
-    if (show) cout << "a " << divisorShift << endl;
 
-    //if (1){
-    //    cout << "" << endl;
-    //}
-    //cout << "divisor  " << divisor << endl;
-    //cout << "divshift "<< divisorShift << endl;
 
     while (shifts != (size_t)-1){
         if (divisorShift <= remainder){
 
-            if (show){
+            //if (show){
                 //cout << "  " << spacing(remainder, divisorShift) << remainder << endl;
                 //cout << " -" << divisorShift << endl;
                 //cout << "_______________________________________1" << endl;
-            }
+            //}
             remainder -= divisorShift;
-            if (show){
+            //if (show){
                 //cout << "  " << remainder << endl << endl;
-            }
+            //}
             quotientIter.flipBit();
         }
-        else if (show){
-
-            //cout << " -" << divisorShift << endl;
-            //cout << "                                       0" << endl;
-        }
-        //cout << quotientIter << endl;
 
         --quotientIter;
         divisorShift >>= 1;
@@ -378,7 +516,7 @@ void LNA::subtract(LNA& target, const LNA& source)
     T t1;
     size_t idx = source.mWordCount - 1;
     for (; idx >= target.mWordCount; idx--){
-        myAssert(source[idx] == 0);//&& "NOT IMPLEMENTED: subtraction resulted in a negative number"); 
+        assert(source[idx] == 0);//&& "NOT IMPLEMENTED: subtraction resulted in a negative number"); 
     }
 
     for (; idx != (size_t)-1; idx--){
@@ -389,7 +527,7 @@ void LNA::subtract(LNA& target, const LNA& source)
             // borrow from above
             size_t i;
             for (i = idx + 1; 1; i++){
-                myAssert(i < target.mWordCount);//&& "NOT IMPLEMENTED: subtraction resulted in a negative number"); // assert i >= 0
+                assert(i < target.mWordCount);//&& "NOT IMPLEMENTED: subtraction resulted in a negative number"); // assert i >= 0
 
                 if (target[i]){
                     target[i] --; // found somewhere to borrow from.
@@ -405,24 +543,21 @@ void LNA::subtract(LNA& target, const LNA& source)
     target.retract();
 }
 
+size_t LNA::byteLength() const
+{
+    return mWordCount * sizeof(T);
+}
+
 LNA::T& LNA::getWord(const size_t idx) const
 {
-
-    if (idx >= mWordCount)
-    {
-        myAssert(0);
-    }
+    assert(idx < mWordCount);
     return mNum[idx];
 }
 
 
 LNA::T& LNA::operator[](const size_t& idx) const
 {
-
-    if (idx >= mWordCount)
-    {
-        myAssert(0);
-    }
+    assert(idx < mWordCount);
     return mNum[idx];
 }
 
@@ -452,14 +587,8 @@ void LNA::operator<<=(const size_t& shifts)
     if (wordsAdded && bitShifts && getWord(i) >> (mWordSize - bitShifts) == 0)
         wordsAdded--;
 
-    //if (show) 
-    //    cout << "b " << *this << endl;
-
     if (wordsAdded)
         expand(mWordCount + wordsAdded);
-
-    //if (show) 
-    //    cout << "a " << *this << endl;
 
     size_t upperIdx = mWordCount - 1;
     size_t lowwerIdx = upperIdx - wordShifts;
@@ -468,12 +597,6 @@ void LNA::operator<<=(const size_t& shifts)
 
     if (bitShifts){
         while (lowwerIdx != 0){
-            //if (show){
-            //    cout << "wu " << setfill('0') << setw(width) << std::hex << getWord(lowwerIdx) << endl;
-            //    cout << "u  " << setfill('0') << setw(width) << std::hex << (getWord(lowwerIdx) << bitShifts) << endl;
-            //    cout << "wl " << setfill('0') << setw(width) << std::hex << (getWord(lowwerIdx - 1)) << endl;
-            //    cout << "l  " << setfill('0') << setw(width) << std::hex << (getWord(lowwerIdx - 1) >> (mWordSize - bitShifts)) << endl;
-            //}
             T upperbits = (getWord(lowwerIdx) << bitShifts);
             T lowwerBits = (getWord(lowwerIdx - 1) >> (mWordSize - bitShifts));
             getWord(upperIdx--) = upperbits + lowwerBits;
@@ -490,9 +613,6 @@ void LNA::operator<<=(const size_t& shifts)
         //T* dest = mNum + wordShifts * sizeof(T);
         //T* src = mNum;
 
-        //memmove(dest, src, (mWordCount - wordShifts) * sizeof(T)); // important to use memmove.
-
-        //upperIdx = wordShifts - 1;
         while (lowwerIdx != (size_t)-1){
             getWord(upperIdx--) = getWord(lowwerIdx--);
         }
@@ -506,8 +626,7 @@ void LNA::operator<<=(const size_t& shifts)
 
 void LNA::operator>>=(const size_t& shifts)
 {
-
-    myAssert(shifts < mWordCount * mWordSize);
+    assert(shifts < mWordCount * mWordSize);
 
     size_t wordShifts = shifts / mWordSize;
     size_t bitShifts = shifts % mWordSize;
@@ -562,13 +681,6 @@ bool LNA::operator==(const LNA& cmp) const
     return true;
 }
 
-//
-//bool LNA::operator>=(const LNA& cmp) const
-//{
-
-//}
-
-
 bool LNA::operator<=(const LNA& cmp) const
 {
 
@@ -586,17 +698,9 @@ bool LNA::operator<=(const LNA& cmp) const
                 return true; // strickly less than. cmp has higher, non zero, words.
         }
     }
-    //if (show){
-    //    cout << "is " << *this << endl;
-    //    cout << "<= " << cmp << endl << endl;
-    //}
 
     int width = 2 * sizeof(T);
     for (; i != (size_t)-1; i--){
-        //if (show){
-        //    cout << "mNum " << setfill('0') << setw(width) << std::hex << getWord(i) << endl;
-        //    cout << "cmp  " << setfill('0') << setw(width) << std::hex << cmp[i] << endl;
-        //}
         if (getWord(i) > cmp[i])
             return false; // strickly greater than
         if (getWord(i) < cmp[i])
@@ -607,10 +711,6 @@ bool LNA::operator<=(const LNA& cmp) const
 
 bool LNA::operator<(const LNA& cmp) const
 {
-#ifdef ST    
-    string s(":operator<");
-    stackTrace st(s);
-#endif
     size_t i;
 
     if (mWordCount > cmp.mWordCount){
@@ -625,13 +725,9 @@ bool LNA::operator<(const LNA& cmp) const
                 return true; // strickly less than. cmp has higher, non zero, words.
         }
     }
-    //cout << "is " << *this << endl;
-    //cout << "<= " << cmp << endl << endl;
 
     int width = 2 * sizeof(T);
     for (; i != (size_t)-1; i--){
-        //cout << "mNum " << setfill('0') << setw(width) << std::hex << getWord(i] << endl;
-        //cout << "cmp  " << setfill('0') << setw(width) << std::hex << cmp[i] << endl;
         if (getWord(i) > cmp[i])
             return false; // strickly greater than
         if (getWord(i) < cmp[i])
@@ -643,20 +739,13 @@ bool LNA::operator<(const LNA& cmp) const
 
 void LNA::operator+=(const LNA& op)
 {
-#ifdef ST   
-    string s(":operator+=");
-    stackTrace st(s);
-#endif
     add(*this, op);
 }
 
 
 void LNA::operator-=(const LNA& op)
 {
-#ifdef ST    
-    string s("operator-=");
-    stackTrace st(s);
-#endif
+
     subtract(*this, op);
 }
 
@@ -673,39 +762,79 @@ void LNA::operator*=(const LNA& op)
     mWordCount = sum.mWordCount;
 }
 
-
-//LNA& LNA::operator=(const LNA& rhs)
-//{
-//
-//    if (mWordCount < rhs.mWordCount)
-//    {
-//        delete mNum;
-//        mNum = new T[rhs.mWordCount];
-//        mWordCount = rhs.mWordCount;
-//    }
-//    else if (mWordCount > rhs.mWordCount){
-//        memset(mNum + rhs.mWordCount, 0, (mWordCount - rhs.mWordCount) * sizeof(T)); // set high words to zero.
-//    }
-//    memcpy(mNum, rhs.mNum, rhs.mWordCount * sizeof(T));
-//    this->retract();
-//
-//    return *this;
-//}
-
-
 void LNA::randomize(size_t size)
 {
 
     clearResize(size);
 
-    static std::default_random_engine generator;
-    static std::uniform_int_distribution<T> distribution(0, (T)-1);
+    //static std::default_random_engine generator;
+    //static std::uniform_int_distribution<T> distribution(0, (T)-1);
     for (size_t i = 0; i < mWordCount; i++){
-        T num = distribution(generator);
+        T num = rand();
+        //T num = distribution(generator);
         //cout << num << endl;
         getWord(i) = num;
     }
 
+}
+void LNA::operator=(const LNA& rhs)
+{
+    copy(rhs);
+}
+
+LNA& LNA::operator++()
+{
+    add(*this,one);
+
+    return *this;
+}
+
+void LNA::operator%=(const LNA& divisor){
+    mod(*this, divisor);
+}
+
+void LNA::unload(WordOrder wo, size_t byteCount, vector<uint8_t>& dest)
+{
+    // check that the upper bytes are in fact 0 and that it is big enough
+    uint8_t* byteView = (uint8_t*) mNum;
+
+    for (size_t idx = mWordCount *sizeof(T) - 1;idx >= byteCount; idx--){
+        assert(byteView[idx] == 0);
+    }
+
+
+    if (wo == WordOrder::MSWF){
+        // LNA has a Least Significant Word First order, 
+
+        vector<uint8_t> reverseNum;
+
+        size_t idx = (byteCount + sizeof(T)-1) / sizeof(T) - 1;
+
+        // if its smaller, fill the most significant words up with 0;
+        for (; idx >= mWordCount; idx--){
+            for (size_t subIdx = 0; subIdx < sizeof(LNA::T); subIdx++){
+                reverseNum.push_back(0);
+            }
+        }
+        
+        for (; idx != (size_t)-1; idx--){
+            for (size_t subIdx = sizeof(LNA::T) - 1; subIdx != (size_t)-1; subIdx--){
+                reverseNum.push_back(mNum[idx] >> (subIdx *8) );
+            }
+        }
+        
+        size_t curSize = dest.size();
+
+        if (curSize < curSize + byteCount)
+            dest.resize(curSize + byteCount);
+
+        dest[curSize + byteCount - 1] = 0; // force it to grow
+
+        memcpy(&dest[curSize], &reverseNum[0], byteCount);
+    }
+    else{
+        assert(0 && "not implemented");
+    }
 }
 
 std::ostream& operator<< (std::ostream& stream, const  LNA& num)
@@ -714,9 +843,74 @@ std::ostream& operator<< (std::ostream& stream, const  LNA& num)
     int width = 2 * sizeof(LNA::T);
 
     for (size_t i = num.mWordCount - 1; i != (size_t)-1; i--){
-        std::cout << std::setfill('0') << std::setw(width) << std::hex << num[i];
+        if (sizeof(LNA::T) == 1){
+            std::cout << std::setfill('0') << std::setw(width) << std::hex << (uint16_t) num[i];
+        }
+        else{
+            std::cout << std::setfill('0') << std::setw(width) << std::hex << num[i];
+        }
     }
     std::cout << "'";
 
     return stream;
 }
+
+
+
+//template<class R>
+//std::vector<R> operator<<(std::vector<R>& stream, const LNA& num)
+//{
+    // LNA has a least significant word first order, 
+    // and vector needs a most significant first word order
+
+    //vector<LNA::T> reverseNum(num.mWordCount);
+
+    //for (size_t idx = num.mWordCount - 1; idx != (size_t)-1; idx--){
+    //    reverseNum.push_back(num[i]);
+    //}
+    //size_t vecWordsAdded;
+    //size_t curSize = stream.size();
+
+    //if (sizeof(R) < sizeof(LNA::T)){
+    //    size_t ratio = sizeof(LNA::T) / sizeof(R);
+    //    vecWordsAdded = num.mWordCount * ratio;
+    //}
+    //else{
+    //    size_t ratio = sizeof(R) / sizeof(LNA::T);
+    //    vecWordsAdded = (num.mWordCount + ratio - 1) / ratio;
+    //}
+
+    //stream[curSize + vecWordsAdded] = 0;// make it grow to be the right size.
+
+    //memcpy(&stream[curSize], &reverseNum[0], )
+
+    //if (sizeof(R) < sizeof(LNA::T)){
+    //    // we have to split each number element accoss multiple vector elements
+    //    size_t ratio = sizeof(LNA::T) / sizeof(R);
+
+    //    for (size_t numIdx = num.mWordCount -1, vecIdx = 0; numIdx != (size_t)-1; numIdx--){
+    //        for (size_t subIdx = 0; subIdx < ratio; subIdx++, vecIdx++){
+    //            stream.push_back( (R)num[numIdx] >> (subIdx * sizeof(R) * 8));
+    //        }
+    //    }
+    //}
+    //else{
+    //    // we have to combine multiple number elements into each vector element
+    //    // Or they are of the same size and either algo works
+
+    //    size_t ratio = sizeof(R) / sizeof(LNA::T);
+    //    size_t addedLen = (num.mWordCount + ratio - 1) / ratio;
+
+    //    for (size_t numIdx = num.mWordCount - 1, vecIdx = 0; vecIdx < addedLen; vecIdx++){
+
+    //        R combinedWord = 0;
+
+    //        for (size_t subIdx = 0; subIdx < ratio; subIdx++, numIdx--){
+    //            combinedWord += (R)num[numIdx] << (subIdx * sizeof(R)* 8);
+    //        }
+
+    //        stream.push_back(combinedWord);
+    //    }
+    //}
+    
+//}
