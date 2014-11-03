@@ -78,7 +78,7 @@ void RSA::encrypt(const std::vector<uint8_t>& input,
         cout << "m  " << message << endl;
         LNA cypher;
 
-        LNA::modExponentiate(message, mKey.publicKey, mKey.modulus, cypher);
+        LNA::exponentiate(message, mKey.publicKey, mKey.modulus, cypher);
 
         cout << "c  " << cypher << endl;
 
@@ -114,7 +114,7 @@ void RSA::decrypt(const std::vector<uint8_t>& input,
 
         cout << "c  " << cypher << endl;
 
-        LNA::secureModExponentiate(cypher, mKey.privateKey, mKey.modulus, message);
+        LNA::secureExponentiate(cypher, mKey.privateKey, mKey.modulus, message);
         
         cout << "m  " << message << endl;
 
@@ -148,5 +148,5 @@ void RSA::decrypt(const std::vector<uint8_t>& input,
 
 void RSA::compute(const LNA& m, const LNA& e, const LNA& n, LNA& c)
 {
-    LNA::modExponentiate(m,e,n,c);
+    LNA::exponentiate(m,e,n,c);
 }

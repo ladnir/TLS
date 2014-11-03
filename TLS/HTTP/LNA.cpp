@@ -2,6 +2,8 @@
 #include "LNA.h"
 #include <algorithm>
 
+#include "LNAShifts.h"
+
 //
 //void myAssert(bool b)
 //{
@@ -202,58 +204,53 @@ void LNA::copy(const LNA& src)
 
     memcpy(mNum, src.mNum, mWordCount * sizeof(T));
 }
-//
-//
-//std::string spacing(const LNA& printed, const LNA cmp)
-//{
-//    std::string ret;
-//    for (size_t i = printed.mWordCount; i < cmp.mWordCount; i++)
-//        ret += "        ";
-//
-//    return ret;
-//}
 
 
 void LNA::multiply(const LNA& multiplicand,
-    const LNA& multiplier,
-    LNA& product)
+                   const LNA& multiplier,
+                         LNA& product)
 {
-
-    //std::cout << "multiplicand " << multiplicand << std::endl;
-    //std::cout << "multiplier   " << multiplier << std::endl;
     product.clear();
     LNA multShift(multiplier);
     BitIterator<T> multIter(multiplicand);
 
     while (multIter.isInRnage()){
-        //std::cout << multIter << endl;
         if (*multIter){
-            /*if (show){
-                cout << "  " << spacing(product, multShift) << product << endl;
-                cout << " +" << multShift << endl;
-                cout << "_______________________________________1" << endl;
-            }*/
             product += multShift;
-           /* if (show){
-                cout << "  " << product << endl << endl;
-            }*/
         }
-       /* else if (show){
-            cout << "                                       0" << endl;
-        }*/
         multShift <<= 1;
         ++multIter;
     }
 }
 
+void LNA::multiply(const LNA& multiplicand,
+                   const LNA& multiplier,
+                   const LNA& modulus,
+                         LNA& product)
+{
+    product.clear();
+    LNA multShift(multiplier);
+    BitIterator<T> multIter(multiplicand);
 
-void LNA::secureModExponentiate(const LNA& base, 
-                                const LNA& exponent, 
-                                const LNA& modulus, 
-                                      LNA& remainder)
+    while (multIter.isInRnage()){
+        if (*multIter){
+            add(product, multShift);//, modulus);
+        }
+        multShift <<= 1;
+        ++multIter;
+    }
+
+    //if (modulus < product)
+    //    product %= modulus;
+}
+
+void LNA::secureExponentiate(const LNA& base, 
+                             const LNA& exponent, 
+                             const LNA& modulus, 
+                                   LNA& remainder)
 {
     BitIterator<T> exponIter(exponent);
-    LNA temp1(base);
+    LNA squares(base);
     LNA temp2;
     LNA temp3;
 
@@ -261,58 +258,64 @@ void LNA::secureModExponentiate(const LNA& base,
     
     while (exponIter.isInRnage()){
         if (*exponIter){
-            temp3 = remainder;
-            remainder *= temp1;
+            // remainder = (remainder * squares) % modulus
+
+            //temp3 = remainder;
+            // multiply(temp3, squares, modulus, remainder);
+
+            remainder *= squares;
             remainder %= modulus;
         }
         else{
             temp3 = remainder; 
-            temp3 *= temp1;
-            temp3 %= modulus;
+            multiply(temp3, squares, modulus, temp2);
+            temp2 %= modulus;
         }
 
-        // square
-        temp2 = temp1;
-        temp1 *= temp2;
-        temp1 %= modulus;
+        // squares = (squares * squares) % modulus
+        
+        temp2 = squares;
+
+        squares *= temp2;
+        squares %= modulus;
+        //multiply(temp2, temp2, modulus, squares);
 
         ++exponIter;
     }
 
 }
 
-void LNA::modExponentiate(const LNA& base, 
-                          const LNA& exponent, 
-                          const LNA& modulus, 
-                                LNA& remainder)
+void LNA::exponentiate(const LNA& base, 
+                       const LNA& exponent, 
+                       const LNA& modulus, 
+                             LNA& remainder)
 {
     BitIterator<T> exponIter(exponent);
-    LNA temp1(base);
+    LNA squares(base);
     LNA temp2;
 
     remainder = LNA::one;
 
     while (exponIter.isInRnage()){
         if (*exponIter){
-            remainder *= temp1;
+            remainder *= squares;
             remainder %= modulus;
         }
 
         // square
-        temp2 = temp1;
-        temp1 *= temp2;
-        temp1 %= modulus;
+        temp2 = squares;
+        squares *= temp2;
+        squares %= modulus;
 
         ++exponIter;
     }
-
 }
 
 void LNA::exponentiate(LNA& base,
                        const LNA& exponent)
 {
     BitIterator<T> exponIter(exponent);
-    LNA temp1(base);
+    LNA squares(base);
     LNA temp2;
 
     base == LNA::one;
@@ -320,12 +323,12 @@ void LNA::exponentiate(LNA& base,
     while (exponIter.isInRnage()){
         if (*exponIter){
             // multiply
-            base *= temp1;
+            base *= squares;
         }
 
         // square
-        temp2 = temp1;
-        temp1 *= temp2;
+        temp2 = squares;
+        squares *= temp2;
 
         ++exponIter;
     }
@@ -342,6 +345,7 @@ void LNA::mod( LNA& dividendRemainder,
     }
 
     LNA divisorShift(divisor);
+
     BitIterator<T> divisorIter(divisor);
     BitIterator<T> dividentIter(dividendRemainder);
 
@@ -370,15 +374,20 @@ void LNA::mod( LNA& dividendRemainder,
         return;
     }
 
+    //LNAShifts divisorShift(divisor, shifts, "<<");
+
     divisorShift <<= shifts;
 
 
     while (shifts != (size_t)-1){
+        
         if (divisorShift <= dividendRemainder){
             dividendRemainder -= divisorShift;
+
         }
         divisorShift >>= 1;
         shifts--;
+        //divisorShift.goToShift(shifts);
     }
 }
 
@@ -434,27 +443,20 @@ void LNA::division(const LNA& dividend,
     divisorShift <<= shifts;
 
 
+    //LNAShifts divisorShift(divisor, shifts, "<<");
+
     while (shifts != (size_t)-1){
         if (divisorShift <= remainder){
-
-            //if (show){
-                //cout << "  " << spacing(remainder, divisorShift) << remainder << endl;
-                //cout << " -" << divisorShift << endl;
-                //cout << "_______________________________________1" << endl;
-            //}
             remainder -= divisorShift;
-            //if (show){
-                //cout << "  " << remainder << endl << endl;
-            //}
             quotientIter.flipBit();
         }
 
         --quotientIter;
         divisorShift >>= 1;
         shifts--;
+        //divisorShift.goToShift(shifts);
     }
 }
-
 
 void LNA::add(LNA& target, const LNA& source)
 {
@@ -476,7 +478,7 @@ void LNA::add(LNA& target, const LNA& source)
         }
     }
 
-    // target  ##############             
+    // target  ##############
     // source  ######
     // cur pos       ^
     //
@@ -634,11 +636,21 @@ void LNA::operator>>=(const size_t& shifts)
     size_t upperIdx = wordShifts,
         lowwerIdx = 0;
 
-    while (upperIdx != mWordCount - 1){
-        T upperbits = getWord(lowwerIdx) >> bitShifts;
-        T lowwerBits = getWord(lowwerIdx + 1) << (sizeof(T)* 8 - bitShifts);
-        getWord(upperIdx++) = upperbits + lowwerBits;
-        lowwerIdx++;
+    if (bitShifts){
+
+        while (upperIdx != mWordCount - 1){
+            T upperbits = getWord(lowwerIdx) >> bitShifts;
+            T lowwerBits = getWord(lowwerIdx + 1) << (sizeof(T)* 8 - bitShifts);
+            getWord(upperIdx++) = upperbits + lowwerBits;
+            lowwerIdx++;
+        }
+    }
+    else{
+        while (upperIdx != mWordCount - 1){
+
+            getWord(upperIdx++) = getWord(lowwerIdx);
+            lowwerIdx++;
+        }
     }
 
     getWord(upperIdx++) = getWord(mWordCount - 1) >> bitShifts;
@@ -659,21 +671,17 @@ bool LNA::operator==(const LNA& cmp) const
 
     for (i = 0; i < min; i++){
         if (getWord(i) != cmp.getWord(i)){
-            cout << "fasle" << endl;
             return false;
         }
     }
 
     for (; i < mWordCount; i++){
         if (getWord(i)){
-            cout << "fasle" << endl;
             return false;
         }
     }
     for (; i < cmp.mWordCount; i++){
         if (cmp.getWord(i)){
-            cout << "fasle" << endl;
-
             return false;
         }
     }
@@ -819,10 +827,16 @@ void LNA::unload(WordOrder wo, size_t byteCount, vector<uint8_t>& dest)
         
         for (; idx != (size_t)-1; idx--){
             for (size_t subIdx = sizeof(LNA::T) - 1; subIdx != (size_t)-1; subIdx--){
-                reverseNum.push_back(mNum[idx] >> (subIdx *8) );
+
+                reverseNum.push_back((uint8_t)(mNum[idx] >> (subIdx * 8)));
             }
         }
-        
+        //
+        //for (idx *= sizeof(LNA::T); idx != (size_t)-1; idx--){
+        //    reverseNum.push_back( byteView [idx]);
+        //}
+
+
         size_t curSize = dest.size();
 
         if (curSize < curSize + byteCount)
@@ -854,63 +868,3 @@ std::ostream& operator<< (std::ostream& stream, const  LNA& num)
 
     return stream;
 }
-
-
-
-//template<class R>
-//std::vector<R> operator<<(std::vector<R>& stream, const LNA& num)
-//{
-    // LNA has a least significant word first order, 
-    // and vector needs a most significant first word order
-
-    //vector<LNA::T> reverseNum(num.mWordCount);
-
-    //for (size_t idx = num.mWordCount - 1; idx != (size_t)-1; idx--){
-    //    reverseNum.push_back(num[i]);
-    //}
-    //size_t vecWordsAdded;
-    //size_t curSize = stream.size();
-
-    //if (sizeof(R) < sizeof(LNA::T)){
-    //    size_t ratio = sizeof(LNA::T) / sizeof(R);
-    //    vecWordsAdded = num.mWordCount * ratio;
-    //}
-    //else{
-    //    size_t ratio = sizeof(R) / sizeof(LNA::T);
-    //    vecWordsAdded = (num.mWordCount + ratio - 1) / ratio;
-    //}
-
-    //stream[curSize + vecWordsAdded] = 0;// make it grow to be the right size.
-
-    //memcpy(&stream[curSize], &reverseNum[0], )
-
-    //if (sizeof(R) < sizeof(LNA::T)){
-    //    // we have to split each number element accoss multiple vector elements
-    //    size_t ratio = sizeof(LNA::T) / sizeof(R);
-
-    //    for (size_t numIdx = num.mWordCount -1, vecIdx = 0; numIdx != (size_t)-1; numIdx--){
-    //        for (size_t subIdx = 0; subIdx < ratio; subIdx++, vecIdx++){
-    //            stream.push_back( (R)num[numIdx] >> (subIdx * sizeof(R) * 8));
-    //        }
-    //    }
-    //}
-    //else{
-    //    // we have to combine multiple number elements into each vector element
-    //    // Or they are of the same size and either algo works
-
-    //    size_t ratio = sizeof(R) / sizeof(LNA::T);
-    //    size_t addedLen = (num.mWordCount + ratio - 1) / ratio;
-
-    //    for (size_t numIdx = num.mWordCount - 1, vecIdx = 0; vecIdx < addedLen; vecIdx++){
-
-    //        R combinedWord = 0;
-
-    //        for (size_t subIdx = 0; subIdx < ratio; subIdx++, numIdx--){
-    //            combinedWord += (R)num[numIdx] << (subIdx * sizeof(R)* 8);
-    //        }
-
-    //        stream.push_back(combinedWord);
-    //    }
-    //}
-    
-//}

@@ -60,6 +60,9 @@
     <ClCompile Include="RSA.cpp">
       <Filter>Source Files\Public Key Crypto</Filter>
     </ClCompile>
+    <ClCompile Include="LNAShifts.cpp">
+      <Filter>Source Files\Public Key Crypto</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Header.h">
@@ -90,6 +93,9 @@
       <Filter>Header Files\Public Key Crypto</Filter>
     </ClInclude>
     <ClInclude Include="RSA.h">
+      <Filter>Header Files\Public Key Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="LNAShifts.h">
       <Filter>Header Files\Public Key Crypto</Filter>
     </ClInclude>
   </ItemGroup>

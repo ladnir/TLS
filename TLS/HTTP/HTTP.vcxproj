@@ -121,6 +121,7 @@
     <ClCompile Include="Client.cpp" />
     <ClCompile Include="DES.cpp" />
     <ClCompile Include="LNA.cpp" />
+    <ClCompile Include="LNAShifts.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="HttpUtil.cpp" />
     <ClCompile Include="RSA.cpp" />
@@ -135,6 +136,7 @@
     <ClInclude Include="Header.h" />
     <ClInclude Include="HttpUtil.h" />
     <ClInclude Include="LNA.h" />
+    <ClInclude Include="LNAShifts.h" />
     <ClInclude Include="RSA.h" />
     <ClInclude Include="Server.h" />
   </ItemGroup>

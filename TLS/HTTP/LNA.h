@@ -31,45 +31,58 @@ public:
         std::vector<uint8_t>::const_iterator&,
         std::vector<uint8_t>::const_iterator&);
 
-	LNA(const LNA&);
-	LNA();
+    LNA(const LNA&);
+    LNA();
     ~LNA();
-
+    
     //template<class type>
     void vectorInit(WordOrder, 
          std::vector<uint8_t>::const_iterator&,
          std::vector<uint8_t>::const_iterator&);
 
     static void add(LNA& target,const LNA& source);
-	static void subtract(LNA& target, const LNA& source);
 
-	static void multiply(const LNA& multiplicand, 
-						 const LNA& multiplier, 
-							   LNA& product);
+    //static void add(      LNA& target, 
+    //                const LNA& source,
+    //                const LNA& modulus);
+
+
+    static void subtract(      LNA& target, 
+                         const LNA& source);
+
+    static void multiply(const LNA& multiplicand, 
+                         const LNA& multiplier, 
+                         const LNA& modulus,
+                               LNA& product);
+
+
+    static void multiply(const LNA& multiplicand, 
+                         const LNA& multiplier, 
+                               LNA& product);
 
     static void exponentiate(      LNA& base,
                              const LNA& exponent);
 
-    static void modExponentiate(const LNA& base,
-                                const LNA& exponent,
-                                const LNA& modulus,
-                                      LNA& remainder);
+    static void exponentiate(const LNA& base,
+                             const LNA& exponent,
+                             const LNA& modulus,
+                                   LNA& remainder);
 
-    static void secureModExponentiate(const LNA& base,
-                                      const LNA& exponent,
-                                      const LNA& modulus,
-                                            LNA& remainder);
+    static void secureExponentiate(const LNA& base,
+                                   const LNA& exponent,
+                                   const LNA& modulus,
+                                         LNA& remainder);
 
     static void mod(      LNA& dividendRemainder,
                     const LNA& modulus);
 
     static void division(const LNA& dividend,
-						 const LNA& divisor,
-							   LNA& quotient,
-							   LNA& remainder);
+                         const LNA& divisor,
+                               LNA& quotient,
+                               LNA& remainder);
 
-	void expand(size_t minSize);
-	void retract();
+    void expand(size_t minSize);
+    void retract();
     void clearResize(size_t size);
     void clear();
     bool isZero() const;
@@ -80,7 +93,7 @@ public:
 
     void unload(WordOrder wo, size_t bytes, std::vector<uint8_t>& destination);
 
-	T&      operator[]  (const size_t&)const;
+    T&      operator[]  (const size_t&)const;
     //bool    operator>=  (const LNA&)const;
     bool    operator<=  (const LNA&)const;
     bool    operator<  (const LNA&)const;
@@ -97,7 +110,7 @@ public:
     void randomize(size_t size);
 
     size_t mWordCount;
-	size_t mWordSize;
+    size_t mWordSize;
 
     T* mNum;
 

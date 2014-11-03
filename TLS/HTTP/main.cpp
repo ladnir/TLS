@@ -9,6 +9,8 @@
 #include <exception>
 #include <random>
 
+#include "LNAShifts.h"
+
 #pragma comment(lib, "Ws2_32.lib")
 
 using namespace std;
@@ -25,7 +27,55 @@ bool init()
     return true;
 }
 
-int main(int argc, char** argv)
+
+
+void LNAShifterTest(){
+    const vector<uint8_t> TestModulus = {
+        0xC4, 0xF8, 0xE9, 0xE1, 0x5D, 0xCA, 0xDF, 0x2B,
+        0x96, 0xC7, 0x63, 0xD9, 0x81, 0x00, 0x6A, 0x64,
+        0x4F, 0xFB, 0x44, 0x15, 0x03, 0x0A, 0x16, 0xED,
+        0x12, 0x83, 0x88, 0x33, 0x40, 0xF2, 0xAA, 0x0E,
+        0x2B, 0xE2, 0xBE, 0x8F, 0xA6, 0x01, 0x50, 0xB9,
+        0x04, 0x69, 0x65, 0x83, 0x7C, 0x3E, 0x7D, 0x15,
+        0x1B, 0x7D, 0xE2, 0x37, 0xEB, 0xB9, 0x57, 0xC2,
+        0x06, 0x63, 0x89, 0x82, 0x50, 0x70, 0x3B, 0x3F
+    };
+
+
+    for (size_t shifts = 9; shifts < 10000; shifts++){
+        LNA test(LNA::MSWF, TestModulus.begin(), TestModulus.end());
+
+
+        LNAShifts shifter(test, shifts, "<<");
+
+        //test <<= shifts;
+        if (shifts == 64){
+            cout << "s " << shifter << endl;
+            cout << "t " << test << endl;
+        }
+        //cout << "s " << shifter << endl;
+        //cout << "t " << test << endl;
+        //assert(test == shifter);
+
+        if (shifts == 65)
+            cout << "";
+
+        for (size_t i = 1; i < shifts; i++){
+            //test >>= 1;
+            shifter.goToShift(shifts - i);
+
+            //if (!(test == shifter)){
+            ///    cout << "s " << shifter << endl;
+            ///    cout << "t " << test << endl;
+            //}
+            //assert(test == shifter);
+        }
+
+    }
+
+    return ;
+}
+void rsaTest()
 {
     const vector<uint8_t> TestModulus = {
         0xC4, 0xF8, 0xE9, 0xE1, 0x5D, 0xCA, 0xDF, 0x2B,
@@ -59,15 +109,17 @@ int main(int argc, char** argv)
     key.publicKey.vectorInit(LNA::MSWF, TestPublicKey.begin(), TestPublicKey.end());
     key.privateKey.vectorInit(LNA::MSWF, TestPrivateKey.begin(), TestPrivateKey.end());
 
-    vector<uint8_t> message = {'a','b','c'};
+    vector<uint8_t> message = { 'a', 'b', 'c' };
     vector<uint8_t> cypher, plaintext;
 
     RSA rsa(key);
+    for (int i = 0; i < 50; i++){
+        rsa.encrypt(message, cypher);
+        rsa.decrypt(cypher, plaintext);
 
-    rsa.encrypt(message,cypher);
+    }
 
-    rsa.decrypt(cypher, plaintext);
-    	
+
     cout << "pt ";
 
     for (uint8_t* i = &plaintext[0]; i <= &plaintext[plaintext.size() - 1]; i++)
@@ -75,7 +127,6 @@ int main(int argc, char** argv)
         std::cout << std::setfill('0') << std::setw(2) << std::hex << (uint16_t)*i;
     }
 
-	return 1;
 }
 
 void rsaComputeTest()
@@ -179,4 +230,14 @@ void LNATest(){
         num1.randomize(s1);
         num2.randomize(s2);
     }
+
+
+}
+
+
+int main(int argc, char** argv)
+{
+    LNATest();
+
+    return 1;
 }
