@@ -42,7 +42,7 @@ void LNAShifterTest(){
     };
 
 
-    for (size_t shifts = 9; shifts < 10000; shifts++){
+    for (size_t shifts = 9; shifts < 1000; shifts++){
         LNA test(LNA::MSWF, TestModulus.begin(), TestModulus.end());
 
 
@@ -116,7 +116,6 @@ void rsaTest()
     for (int i = 0; i < 50; i++){
         rsa.encrypt(message, cypher);
         rsa.decrypt(cypher, plaintext);
-
     }
 
 

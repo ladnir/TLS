@@ -63,6 +63,12 @@
     <ClCompile Include="LNAShifts.cpp">
       <Filter>Source Files\Public Key Crypto</Filter>
     </ClCompile>
+    <ClCompile Include="PrimeGen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PRNG.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Header.h">
@@ -97,6 +103,12 @@
     </ClInclude>
     <ClInclude Include="LNAShifts.h">
       <Filter>Header Files\Public Key Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="PrimeGen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PRNG.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

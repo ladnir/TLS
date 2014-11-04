@@ -124,6 +124,8 @@
     <ClCompile Include="LNAShifts.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="HttpUtil.cpp" />
+    <ClCompile Include="PrimeGen.cpp" />
+    <ClCompile Include="PRNG.cpp" />
     <ClCompile Include="RSA.cpp" />
     <ClCompile Include="Server.cpp" />
   </ItemGroup>
@@ -137,6 +139,8 @@
     <ClInclude Include="HttpUtil.h" />
     <ClInclude Include="LNA.h" />
     <ClInclude Include="LNAShifts.h" />
+    <ClInclude Include="PrimeGen.h" />
+    <ClInclude Include="PRNG.h" />
     <ClInclude Include="RSA.h" />
     <ClInclude Include="Server.h" />
   </ItemGroup>
